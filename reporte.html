@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INVENTARIO PRC| Panel de Inventario</title>
+    <style>
+        /* --- DISEÑO CSS (ESTILOS) --- */
+        :root {
+            --primary: #2563eb;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --accent: #3b82f6;
+            --success: #22c55e;
+            --danger: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body { display: flex; height: 100vh; background-color: var(--light); color: var(--dark); }
+
+        /* Barra Lateral */
+        .sidebar {
+            width: 280px;
+            background: var(--dark);
+            color: white;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar h2 { 
+            font-size: 1.5rem; 
+            margin-bottom: 2rem; 
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .menu-item { list-style: none; margin-bottom: 0.5rem; }
+
+        .menu-btn {
+            width: 100%;
+            padding: 12px 15px;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .menu-btn:hover { background: #1e293b; color: white; }
+
+        /* Submenús */
+        .submenu { 
+            display: none; 
+            padding-left: 1.5rem; 
+            margin-top: 5px;
+            border-left: 2px solid #334155;
+        }
+
+        .submenu li { list-style: none; }
+
+        .submenu a {
+            display: block;
+            padding: 8px;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+
+        .submenu a:hover { color: var(--accent); }
+
+        /* Contenido Principal */
+        .main-content { flex: 1; padding: 2rem; overflow-y: auto; }
+
+        .header { 
+            background: white; 
+            padding: 1.5rem; 
+            border-radius: 12px; 
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Tabla de Inventario */
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+
+        th { text-align: left; padding: 12px; border-bottom: 2px solid #f1f5f9; color: #64748b; font-size: 0.85rem; }
+
+        td { padding: 15px 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
+
+        .status-pill {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .status-new { background: #dcfce7; color: #166534; }
+        .status-used { background: #fef9c3; color: #854d0e; }
+
+        /* Panel de Acción (Abajo) */
+        .action-panel {
+            margin-top: 2rem;
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 12px;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+
+        input, select {
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        .btn-add { background: var(--success); color: white; }
+        .btn-remove { background: var(--danger); color: white; }
+        .btn:active { opacity: 0.8; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <h2>INVENTARIO PRC</h2>
+        <ul>
+            <li class="menu-item">
+                <button class="menu-btn" onclick="toggleSub('indumentaria')">👕 Indumentaria ▾</button>
+                <ul id="indumentaria" class="submenu">
+                    <li><a href="#" onclick="updateTable('Camisas')">Camisas</a></li>
+                    <li><a href="#" onclick="updateTable('Pantalones')">Pantalones</a></li>
+                    <li><a href="#" onclick="updateTable('Corbatas')">Corbatas</a></li>
+                </ul>
+            </li>
+            <li class="menu-item">
+                <button class="menu-btn" onclick="toggleSub('celulares')">📱 Celulares ▾</button>
+                <ul id="celulares" class="submenu">
+                    <li><a href="#">Samsung</a></li>
+                    <li><a href="#">iPhone</a></li>
+                </ul>
+            </li>
+            <li class="menu-item">
+                <button class="menu-btn">📚 Útiles</button>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main -->
+    <div class="main-content">
+        <div class="header">
+            <h1 id="view-title">Selecciona una categoría</h1>
+            <div id="item-info" style="font-weight: bold; color: var(--primary);"></div>
+        </div>
+
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Talla</th>
+                        <th>Estado</th>
+                        <th>Stock Actual</th>
+                    </tr>
+                </thead>
+                <tbody id="inventory-body">
+                    <!-- Los datos aparecerán aquí -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Panel de Control -->
+        <div class="action-panel">
+            <div class="input-group">
+                <label>Talla</label>
+                <select id="size-select">
+                    <option value="S">S</option>
+                    <option value="M">M</option>
+                    <option value="L">L</option>
+                    <option value="XL">XL</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Estado</label>
+                <select id="condition-select">
+                    <option value="Nuevo">Nuevo</option>
+                    <option value="Usado">Usado</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Cantidad</label>
+                <input type="number" id="qty-input" value="1" min="1">
+            </div>
+            <button class="btn btn-add" onclick="modifyStock('add')">Agregar (+)</button>
+            <button class="btn btn-remove" onclick="modifyStock('remove')">Quitar (-)</button>
+        </div>
+    </div>
+
+    <script>
+        /* --- LÓGICA JAVASCRIPT --- */
+        
+        function toggleSub(id) {
+            const el = document.getElementById(id);
+            el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+        }
+
+        let currentProduct = "";
+
+        function updateTable(productName) {
+            currentProduct = productName;
+            document.getElementById('view-title').innerText = "Inventario: " + productName;
+            const body = document.getElementById('inventory-body');
+            
+            // Simulación de datos iniciales
+            body.innerHTML = `
+                <tr>
+                    <td>${productName}</td>
+                    <td>M</td>
+                    <td><span class="status-pill status-new">Nuevo</span></td>
+                    <td id="stock-val">10</td>
+                </tr>
+            `;
+        }
+
+        function modifyStock(type) {
+            if(!currentProduct) return alert("Selecciona una prenda primero");
+            
+            const stockVal = document.getElementById('stock-val');
+            const qty = parseInt(document.getElementById('qty-input').value);
+            let current = parseInt(stockVal.innerText);
+
+            if(type === 'add') {
+                stockVal.innerText = current + qty;
+            } else {
+                if(current >= qty) {
+                    stockVal.innerText = current - qty;
+                } else {
+                    alert("No hay suficiente stock para quitar");
+                }
+            }
+        }
+    </script>
+</body>
+</html>
