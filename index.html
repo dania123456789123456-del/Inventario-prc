@@ -1,274 +1,683 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INVENTARIO PRC| Panel de Inventario</title>
-    <style>
-        /* --- DISEÑO CSS (ESTILOS) --- */
-        :root {
-            --primary: #2563eb;
-            --dark: #0f172a;
-            --light: #f8fafc;
-            --accent: #3b82f6;
-            --success: #22c55e;
-            --danger: #ef4444;
-        }
+<style>
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+/* ====== FONDO ====== */
+body {
+    font-family: 'Poppins', sans-serif;
+    margin:0;
+    display:flex;
+    background: linear-gradient(135deg, #fdfbfb, #ebedee);
+}
 
-        body { display: flex; height: 100vh; background-color: var(--light); color: var(--dark); }
+/* ====== SIDEBAR CLARO ====== */
+.sidebar {
+    width: 260px;
+    background: #ffffff;
+    color:#444;
+    padding:1.5rem 1rem;
+    height:100vh;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.05);
+    border-right:1px solid #eee;
 
-        /* Barra Lateral */
-        .sidebar {
-            width: 280px;
-            background: var(--dark);
-            color: white;
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
-        }
+    display: flex;
+    flex-direction: column;
+}
 
-        .sidebar h2 { 
-            font-size: 1.5rem; 
-            margin-bottom: 2rem; 
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+.sidebar h2 {
+    text-align:center;
+    margin-bottom:1.5rem;
+    color:#ff4f81;
+    font-weight:700;
+}
 
-        .menu-item { list-style: none; margin-bottom: 0.5rem; }
+/* BOTONES MENU */
+.sidebar button {
+    width:100%;
+    margin:8px 0;
+    padding:12px;
+    background:#f8f8f8;
+    border:none;
+    color:#444;
+    cursor:pointer;
+    border-radius:12px;
+    transition:0.25s;
+    font-weight:500;
+}
 
-        .menu-btn {
-            width: 100%;
-            padding: 12px 15px;
-            background: transparent;
-            border: none;
-            color: #94a3b8;
-            text-align: left;
-            cursor: pointer;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
+.sidebar button:hover {
+    background: linear-gradient(45deg, #ff6a88, #ff99ac);
+    color:white;
+    transform:translateX(5px);
+}
 
-        .menu-btn:hover { background: #1e293b; color: white; }
+/* ====== MAIN ====== */
+.main {
+    flex:1;
+    padding:1.5rem;
+}
 
-        /* Submenús */
-        .submenu { 
-            display: none; 
-            padding-left: 1.5rem; 
-            margin-top: 5px;
-            border-left: 2px solid #334155;
-        }
+/* ====== CARDS ====== */
+.card {
+    background:white;
+    padding:1.3rem;
+    border-radius:18px;
+    margin-bottom:1rem;
+    box-shadow:0 10px 25px rgba(0,0,0,0.06);
+    transition:0.25s;
+}
 
-        .submenu li { list-style: none; }
+.card:hover {
+    transform:translateY(-4px);
+}
 
-        .submenu a {
-            display: block;
-            padding: 8px;
-            color: #64748b;
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: 0.2s;
-        }
+/* ====== TITULOS ====== */
+h3 {
+    margin-top:0;
+    color:#ff4f81;
+}
 
-        .submenu a:hover { color: var(--accent); }
+/* ====== INPUTS ====== */
+.input-group {
+    margin-bottom:0.6rem;
+}
 
-        /* Contenido Principal */
-        .main-content { flex: 1; padding: 2rem; overflow-y: auto; }
+.input-group label {
+    font-size:0.75rem;
+    color:#666;
+}
 
-        .header { 
-            background: white; 
-            padding: 1.5rem; 
-            border-radius: 12px; 
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+input, select, textarea {
+    width:100%;
+    padding:9px;
+    font-size:0.85rem;
+    border-radius:10px;
+    border:1px solid #eee;
+    background:#fafafa;
+    transition:0.2s;
+}
 
-        /* Tabla de Inventario */
-        .card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-        }
+input:focus, select:focus, textarea:focus {
+    outline:none;
+    border-color:#ff6a88;
+    background:white;
+    box-shadow:0 0 5px rgba(255,106,136,0.2);
+}
 
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+/* ====== BOTONES ====== */
+button.btn {
+    padding:9px 15px;
+    margin-right:5px;
+    cursor:pointer;
+    border:none;
+    border-radius:10px;
+    color:white;
+    font-weight:500;
+    transition:0.2s;
+}
 
-        th { text-align: left; padding: 12px; border-bottom: 2px solid #f1f5f9; color: #64748b; font-size: 0.85rem; }
+.btn-add {
+    background: linear-gradient(45deg, #ff6a88, #ff99ac);
+}
 
-        td { padding: 15px 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
+.btn-remove {
+    background: linear-gradient(45deg, #ff4d6d, #ff758f);
+}
 
-        .status-pill {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
+.btn-update {
+    background: linear-gradient(45deg, #c77dff, #9d4edd);
+}
 
-        .status-new { background: #dcfce7; color: #166534; }
-        .status-used { background: #fef9c3; color: #854d0e; }
+button.btn:hover {
+    transform:scale(1.05);
+    opacity:0.9;
+}
 
-        /* Panel de Acción (Abajo) */
-        .action-panel {
-            margin-top: 2rem;
-            background: #f1f5f9;
-            padding: 1.5rem;
-            border-radius: 12px;
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
+/* ====== STOCK MEJORADO ====== */
+.stock-container {
+    margin-top: 20px;          /* Crea el espacio respecto a los botones */
+    padding: 12px 18px;
+    background: #fff0f3;       /* Fondo rosado muy suave */
+    border-radius: 12px;
+    display: inline-block;     /* Para que no ocupe todo el ancho */
+    border: 1px solid #ffccd5;
+}
 
-        .input-group { display: flex; flex-direction: column; gap: 5px; }
+.stock-label {
+    font-size: 0.85rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
 
-        input, select {
-            padding: 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            outline: none;
-        }
+.stock-number {
+    font-size: 1.2rem;
+    color: #ff4f81;           /* Tu color principal */
+    font-weight: 800;
+    margin-left: 8px;
+}
 
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: opacity 0.2s;
-        }
 
-        .btn-add { background: var(--success); color: white; }
-        .btn-remove { background: var(--danger); color: white; }
-        .btn:active { opacity: 0.8; }
+/* ====== TABLA ====== */
+table {
+    width:100%;
+    border-collapse:collapse;
+    margin-top:0.5rem;
+    border-radius:12px;
+    overflow:hidden;
+}
 
-    </style>
+th {
+    background:#ff4f81;
+    color:white;
+    padding:10px;
+}
+
+td {
+    padding:8px;
+    background:#fff;
+    border-bottom:1px solid #f1f1f1;
+}
+
+tr:nth-child(even) td {
+    background:#fafafa;
+}
+
+tr:hover td {
+    background:#ffe4ec;
+}
+
+/* ====== SCROLL ====== */
+::-webkit-scrollbar {
+    width:8px;
+}
+::-webkit-scrollbar-thumb {
+    background:#ff6a88;
+    border-radius:10px;
+}
+
+/* --- NUEVO CUADRO DE SELECCIÓN --- */
+.modal-overlay {
+    display: none; /* Oculto por defecto */
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px);
+    z-index: 9999; justify-content: center; align-items: center;
+}
+
+.modal-content {
+    background: white; 
+    width: 85%; 
+    max-width: 350px;
+    border-radius: 25px; 
+    padding: 20px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    border: 2px solid #ff4f81;
+
+    /* 👇 AGREGA ESTAS DOS LÍNEAS 👇 */
+    max-height: 230px;  /* Altura máxima antes de que aparezca el scroll */
+    overflow-y: auto;   /* Activa el scroll vertical */
+}
+
+.modal-titulo {
+    color: #ff4f81; font-weight: bold; margin-bottom: 15px;
+    text-align: center; font-size: 1.1rem; text-transform: uppercase;
+}
+
+.opcion-item {
+    padding: 12px 15px; margin: 8px 0;
+    background: #fff5f7; border-radius: 12px;
+    cursor: pointer; color: #444; font-weight: 500;
+    transition: 0.2s; border: 1px solid transparent;
+}
+
+.opcion-item:hover {
+    background: #ffecf1; border-color: #ff4f81; transform: scale(1.02);
+}
+
+/* AGRUPA BOTONES ARRIBA */
+.menu {
+    margin-top: 10px;
+}
+
+/* FOOTER ABAJO PERFECTO */
+.sidebar-footer {
+    margin-top: auto;
+    display: flex;
+    gap: 10px;
+}
+
+/* BOTONES MÁS FINOS */
+.btn-logout, .btn-excel {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+/* COLORES */
+.btn-logout {
+    background: linear-gradient(45deg, #ff4d6d, #ff758f);
+}
+
+.btn-excel {
+    background: linear-gradient(45deg, #4cc9f0, #4895ef);
+}
+
+/* HOVER */
+.btn-logout:hover,
+.btn-excel:hover {
+    transform: translateY(-2px);
+}
+
+</style>
 </head>
+
 <body>
+<div id="loginScreen" style="
+    width:100%;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background: linear-gradient(135deg, #ffdde1, #ee9ca7);
+">
 
-    <!-- Sidebar -->
-    <nav class="sidebar">
-        <h2>INVENTARIO PRC</h2>
-        <ul>
-            <li class="menu-item">
-                <button class="menu-btn" onclick="toggleSub('indumentaria')">👕 Indumentaria ▾</button>
-                <ul id="indumentaria" class="submenu">
-                    <li><a href="#" onclick="updateTable('Camisas')">Camisas</a></li>
-                    <li><a href="#" onclick="updateTable('Pantalones')">Pantalones</a></li>
-                    <li><a href="#" onclick="updateTable('Corbatas')">Corbatas</a></li>
-                </ul>
-            </li>
-            <li class="menu-item">
-                <button class="menu-btn" onclick="toggleSub('celulares')">📱 Celulares ▾</button>
-                <ul id="celulares" class="submenu">
-                    <li><a href="#">Samsung</a></li>
-                    <li><a href="#">iPhone</a></li>
-                </ul>
-            </li>
-            <li class="menu-item">
-                <button class="menu-btn">📚 Útiles</button>
-            </li>
-        </ul>
-    </nav>
+    <div style="
+        background:white;
+        padding:30px;
+        border-radius:20px;
+        width:300px;
+        text-align:center;
+        box-shadow:0 10px 30px rgba(0,0,0,0.2);
+    ">
+        <h2 style="color:#ff4f81;">Inventario PRC</h2>
 
-    <!-- Main -->
-    <div class="main-content">
-        <div class="header">
-            <h1 id="view-title">Selecciona una categoría</h1>
-            <div id="item-info" style="font-weight: bold; color: var(--primary);"></div>
-        </div>
+        <input type="text" id="user" placeholder="Usuario" style="margin:10px 0;">
+        <input type="password" id="pass" placeholder="Contraseña" style="margin:10px 0;">
 
-        <div class="card">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Talla</th>
-                        <th>Estado</th>
-                        <th>Stock Actual</th>
-                    </tr>
-                </thead>
-                <tbody id="inventory-body">
-                    <!-- Los datos aparecerán aquí -->
-                </tbody>
-            </table>
-        </div>
+        <button onclick="login()" class="btn btn-add" style="width:100%;">Ingresar</button>
 
-        <!-- Panel de Control -->
-        <div class="action-panel">
-            <div class="input-group">
-                <label>Talla</label>
-                <select id="size-select">
-                    <option value="S">S</option>
-                    <option value="M">M</option>
-                    <option value="L">L</option>
-                    <option value="XL">XL</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label>Estado</label>
-                <select id="condition-select">
-                    <option value="Nuevo">Nuevo</option>
-                    <option value="Usado">Usado</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label>Cantidad</label>
-                <input type="number" id="qty-input" value="1" min="1">
-            </div>
-            <button class="btn btn-add" onclick="modifyStock('add')">Agregar (+)</button>
-            <button class="btn btn-remove" onclick="modifyStock('remove')">Quitar (-)</button>
-        </div>
+        <p id="errorLogin" style="color:red; font-size:0.8rem;"></p>
+    </div>
+</div>
+<!-- TODO TU HTML ORIGINAL (NO MODIFICADO) -->
+<!-- PEGA EXACTAMENTE LO QUE YA TENÍAS DESDE <div class="sidebar"> HASTA EL FINAL -->
+
+<!-- 👇👇👇 PEGA AQUÍ TU MISMO CÓDIGO SIN CAMBIOS 👇👇👇 -->
+
+<div id="panelApp" style="display:none;">
+<div class="sidebar">
+    <h2>Inventario PRC</h2>
+
+    <!-- 👇 AGRUPADOR -->
+    <div class="menu">
+        <button onclick="showPanel('ropa')">👕 Ropa</button>
+        <button onclick="showPanel('calzado')">👞 Calzado</button>
+        <button onclick="showPanel('celulares')">📱 Celulares</button>
+        <button onclick="showPanel('utiles')">🗃️ Útiles de Oficina</button>
+        <button onclick="showPanel('implementos')">➕ Implementos</button>
     </div>
 
-    <script>
-        /* --- LÓGICA JAVASCRIPT --- */
-        
-        function toggleSub(id) {
-            const el = document.getElementById(id);
-            el.style.display = (el.style.display === 'block') ? 'none' : 'block';
-        }
+    <!-- 👇 FOOTER -->
+    <div class="sidebar-footer">
+        <button class="btn-excel" onclick="exportarExcel()">📊 Exportar</button>
+<button class="btn-logout" onclick="logout()">🚪 Salir</button>
+    </div>
+</div>
 
-        let currentProduct = "";
 
-        function updateTable(productName) {
-            currentProduct = productName;
-            document.getElementById('view-title').innerText = "Inventario: " + productName;
-            const body = document.getElementById('inventory-body');
-            
-            // Simulación de datos iniciales
-            body.innerHTML = `
-                <tr>
-                    <td>${productName}</td>
-                    <td>M</td>
-                    <td><span class="status-pill status-new">Nuevo</span></td>
-                    <td id="stock-val">10</td>
-                </tr>
-            `;
-        }
+    <!-- PANEL ROPA -->
+    <div class="card" id="panel-ropa" style="display:none;">
+        <h3>Ropa</h3>
+        <div class="input-group"><label>Producto</label><select id="ropa-producto" onmousedown="event.preventDefault(); abrirSelectorPersonalizado('ropa-producto', 'ropa')">
+</select>
+</div>
+        <div class="input-group"><label>Talla</label><select id="ropa-talla" onmousedown="event.preventDefault(); abrirSelectorPersonalizado('ropa-talla','ropa')"></select></div>
+        <div class="input-group"><label>Estado</label><select id="ropa-estado" onmousedown="event.preventDefault(); abrirSelectorPersonalizado('ropa-estado','ropa')"><option>Nuevo</option><option>Usado</option></select></div>
+        <div class="input-group"><label>Cantidad</label><input type="number" id="ropa-cantidad" value="1" min="1"></div>
+        <div class="input-group"><label>Observación</label><textarea id="ropa-obs"></textarea></div>
+        <button class="btn btn-add" onclick="modifyStock('ropa','add')">Agregar</button>
+        <button class="btn btn-remove" onclick="modifyStock('ropa','remove')">Retirar</button>
+        <div class="stock-container">
+    <span class="stock-label">Stock actual:</span>
+    <span id="ropa-stock" class="stock-number">0</span>
+</div>
 
-        function modifyStock(type) {
-            if(!currentProduct) return alert("Selecciona una prenda primero");
-            
-            const stockVal = document.getElementById('stock-val');
-            const qty = parseInt(document.getElementById('qty-input').value);
-            let current = parseInt(stockVal.innerText);
+    </div>
 
-            if(type === 'add') {
-                stockVal.innerText = current + qty;
+    <!-- PANEL CALZADO -->
+    <div class="card" id="panel-calzado" style="display:none;">
+        <h3>Calzado</h3>
+        <div class="input-group"><label>Producto</label><select id="calzado-producto" onmousedown="event.preventDefault(); abrirSelectorPersonalizado('calzado-producto', 'calzado')">
+</select>
+</div>
+        <div class="input-group"><label>Talla</label><select id="calzado-talla" onmousedown="event.preventDefault(); abrirSelectorPersonalizado('calzado-talla','calzado')"></select></div>
+        <div class="input-group"><label>Estado</label><select id="calzado-estado" onmousedown="event.preventDefault(); abrirSelectorPersonalizado('calzado-estado','calzado')"><option>Nuevo</option><option>Usado</option></select></div>
+        <div class="input-group"><label>Pares</label><input type="number" id="calzado-cantidad" value="1" min="1"></div>
+        <div class="input-group"><label>Observación</label><textarea id="calzado-obs"></textarea></div>
+        <button class="btn btn-add" onclick="modifyStock('calzado','add')">Agregar</button>
+        <button class="btn btn-remove" onclick="modifyStock('calzado','remove')">Retirar</button>
+        <div class="stock-container">
+    <span class="stock-label">Stock actual:</span>
+    <span id="calzado-stock" class="stock-number">0</span>
+</div>
+
+    </div>
+
+    <!-- PANEL CELULARES -->
+    <div class="card" id="panel-celulares" style="display:none;">
+        <h3>Celulares</h3>
+        <div class="input-group"><label>Producto</label><select id="celular-producto" onmousedown="event.preventDefault(); abrirSelectorPersonalizado('celular-producto', 'celular')">
+</select></div>
+        <div class="input-group"><label>Operador</label><input type="text" id="celular-operador"></div>
+        <div class="input-group"><label>Número actual</label><input type="text" id="celular-actual" disabled></div>
+        <div class="input-group"><label>Nuevo número</label><input type="text" id="celular-nuevo"></div>
+        <div class="input-group"><label>Observación</label><textarea id="celular-obs"></textarea></div>
+        <button class="btn btn-update" onclick="updateCellNumber()">Actualizar Número</button>
+    </div>
+
+    <!-- PANEL UTILES DE OFICINA -->
+    <div class="card" id="panel-utiles" style="display:none;">
+        <h3>Útiles de Oficina</h3>
+        <div class="input-group"><label>Producto</label><select id="utiles-producto" onmousedown="event.preventDefault(); abrirSelectorPersonalizado('utiles-producto', 'utiles')">
+</select
+</select></div>
+        <div class="input-group"><label>Estado</label><select id="utiles-estado" onmousedown="event.preventDefault(); abrirSelectorPersonalizado('utiles-estado','utiles')"><option>Nuevo</option><option>Usado</option></select></div>
+        <div class="input-group"><label>Cantidad</label><input type="number" id="utiles-cantidad" value="1" min="1"></div>
+        <div class="input-group"><label>Observación</label><textarea id="utiles-obs"></textarea></div>
+        <button class="btn btn-add" onclick="modifyStock('utiles','add')">Agregar</button>
+        <button class="btn btn-remove" onclick="modifyStock('utiles','remove')">Retirar</button>
+        <div class="stock-container">
+    <span class="stock-label">Stock actual:</span>
+    <span id="utiles-stock" class="stock-number">0</span>
+</div>
+
+    </div>
+
+    <!-- PANEL IMPLEMENTOS -->
+    <div class="card" id="panel-implementos" style="display:none;">
+        <h3>Implementos</h3>
+        <div class="input-group"><label>Producto</label><select id="implementos-producto" onmousedown="event.preventDefault(); abrirSelectorPersonalizado('implementos-producto', 'implementos')">
+</select></div>
+        <div class="input-group"><label>Estado</label><select id="implementos-estado" onmousedown="event.preventDefault(); abrirSelectorPersonalizado('implementos-estado','implementos')"><option>Nuevo</option><option>Usado</option></select></div>
+        <div class="input-group"><label>Cantidad</label><input type="number" id="implementos-cantidad" value="1" min="1"></div>
+        <div class="input-group"><label>Observación</label><textarea id="implementos-obs"></textarea></div>
+        <button class="btn btn-add" onclick="modifyStock('implementos','add')">Agregar</button>
+        <button class="btn btn-remove" onclick="modifyStock('implementos','remove')">Retirar</button>
+        <div class="stock-container">
+    <span class="stock-label">Stock actual:</span>
+    <span id="implementos-stock" class="stock-number">0</span>
+</div>
+
+    </div>
+
+    <!-- HISTORIAL GENERAL -->
+    <div class="card">
+        <h3>📜 Historial General</h3>
+        <table>
+            <thead>
+                <tr><th>Fecha</th><th>Producto</th><th>Talla/N°</th><th>Estado</th><th>Acción</th><th>Cantidad</th><th>Observación</th></tr>
+            </thead>
+            <tbody id="historial-body"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+// Datos iniciales
+let inventory={ropa:{}, calzado:{}, celular:{}, utiles:{}, implementos:{}};
+let currentProduct={ropa:'', calzado:'', celular:'', utiles:'', implementos:''};
+
+// Productos
+const ropaList=['Camisa Amarilla','Camisa Blanca','Pantalón Marrón','Chompa Azul']; // <--- AQUÍ agregas más ropa
+const calzadoList=['Botín Negro','Zapato Negro','Forcei']; // <--- AQUÍ agregas más calzado
+const celularList=['Samsung','iPhone']; // <--- AQUÍ agregas más celulares
+const utilesList=['Lapicero','Cuaderno A4','Archivador','Cinta de Embalaje','Papel Bond']; // <--- AQUÍ agregas más útiles
+const implementosList=['Batos','Linterna','Cartuchera','Vara']; // <--- AQUÍ agregas más implementos
+
+// Inicialización
+function init(){
+    let select;
+    select=document.getElementById('ropa-producto'); ropaList.forEach(p=>select.add(new Option(p)));
+    select=document.getElementById('calzado-producto'); calzadoList.forEach(p=>select.add(new Option(p)));
+    select=document.getElementById('celular-producto'); celularList.forEach(p=>select.add(new Option(p)));
+    select=document.getElementById('utiles-producto'); utilesList.forEach(p=>select.add(new Option(p)));
+    select=document.getElementById('implementos-producto'); implementosList.forEach(p=>select.add(new Option(p)));
+
+    let tallaRopa=document.getElementById('ropa-talla'); ['S','M','L','XL','XXL','XXXL'].forEach(t=>tallaRopa.add(new Option(t)));
+    let tallaCalzado=document.getElementById('calzado-talla'); for(let i=34;i<=60;i++) tallaCalzado.add(new Option(i));
+}
+
+// Mostrar panel
+function showPanel(panel){
+    ['ropa','calzado','celulares','utiles','implementos'].forEach(p=>document.getElementById('panel-'+p).style.display='none');
+    document.getElementById('panel-'+panel).style.display='block';
+}
+
+// Selección producto
+function selectProduct(type){
+    const sel=document.getElementById(type+'-producto');
+    currentProduct[type]=sel.value;
+
+    if(type==='celular'){
+        if(!inventory.celular[currentProduct.celular]) inventory.celular[currentProduct.celular]={number:'',operator:''};
+        document.getElementById('celular-actual').value=inventory.celular[currentProduct.celular].number;
+        document.getElementById('celular-operador').value=inventory.celular[currentProduct.celular].operator;
+        document.getElementById('celular-nuevo').value='';
+        document.getElementById('celular-obs').value='';
+    } else {
+        updateStockView(type);
+        document.getElementById(type+'-obs').value='';
+    }
+}
+
+// Actualizar stock visual
+function updateStockView(type){
+    let stockSpan, key, qty;
+    if(type==='ropa'){
+        key=currentProduct.ropa+'|'+document.getElementById('ropa-talla').value+'|'+document.getElementById('ropa-estado').value;
+        stockSpan=document.getElementById('ropa-stock');
+        qty=inventory.ropa[key]||0;
+        stockSpan.innerText=qty;
+        stockSpan.style.color=qty>0?'green':'red';
+    } else if(type==='calzado'){
+        key=currentProduct.calzado+'|'+document.getElementById('calzado-talla').value+'|'+document.getElementById('calzado-estado').value;
+        stockSpan=document.getElementById('calzado-stock');
+        qty=inventory.calzado[key]||0;
+        stockSpan.innerText=qty;
+        stockSpan.style.color=qty>0?'green':'red';
+    } else if(type==='utiles'){
+        key=currentProduct.utiles+'|'+document.getElementById('utiles-estado').value;
+        stockSpan=document.getElementById('utiles-stock');
+        qty=inventory.utiles[key]||0;
+        stockSpan.innerText=qty;
+        stockSpan.style.color=qty>0?'green':'red';
+    } else if(type==='implementos'){
+        key=currentProduct.implementos+'|'+document.getElementById('implementos-estado').value;
+        stockSpan=document.getElementById('implementos-stock');
+        qty=inventory.implementos[key]||0;
+        stockSpan.innerText=qty;
+        stockSpan.style.color=qty>0?'green':'red';
+    }
+}
+
+// Modificar stock
+function modifyStock(type,action){
+    let producto, talla='', estado, qty, obs, key;
+    if(type==='ropa'){
+        producto=currentProduct.ropa;
+        talla=document.getElementById('ropa-talla').value;
+        estado=document.getElementById('ropa-estado').value;
+        qty=parseInt(document.getElementById('ropa-cantidad').value);
+        obs=document.getElementById('ropa-obs').value;
+        key=producto+'|'+talla+'|'+estado;
+        if(!inventory.ropa[key]) inventory.ropa[key]=0;
+        if(action==='remove' && qty>inventory.ropa[key]) { alert('No hay suficiente stock'); return; }
+        inventory.ropa[key]+=(action==='add'?qty:-qty);
+        updateStockView('ropa');
+        addHistory(new Date().toLocaleString(),producto,talla,estado,action==='add'?'Agregado':'Retirado',qty,obs);
+    } else if(type==='calzado'){
+        producto=currentProduct.calzado;
+        talla=document.getElementById('calzado-talla').value;
+        estado=document.getElementById('calzado-estado').value;
+        qty=parseInt(document.getElementById('calzado-cantidad').value);
+        obs=document.getElementById('calzado-obs').value;
+        key=producto+'|'+talla+'|'+estado;
+        if(!inventory.calzado[key]) inventory.calzado[key]=0;
+        if(action==='remove' && qty>inventory.calzado[key]) { alert('No hay suficiente stock'); return; }
+        inventory.calzado[key]+=(action==='add'?qty:-qty);
+        updateStockView('calzado');
+        let textoPares = qty === 1 ? '1 par' : qty + ' pares';
+addHistory(new Date().toLocaleString(),producto,talla,estado,action==='add'?'Agregado':'Retirado',textoPares,obs);
+    } else if(type==='utiles'){
+        producto=currentProduct.utiles;
+        estado=document.getElementById('utiles-estado').value;
+        qty=parseInt(document.getElementById('utiles-cantidad').value);
+        obs=document.getElementById('utiles-obs').value;
+        key=producto+'|'+estado;
+        if(!inventory.utiles[key]) inventory.utiles[key]=0;
+        if(action==='remove' && qty>inventory.utiles[key]) { alert('No hay suficiente stock'); return; }
+        inventory.utiles[key]+=(action==='add'?qty:-qty);
+        updateStockView('utiles');
+        addHistory(new Date().toLocaleString(),producto,'N/A',estado,action==='add'?'Agregado':'Retirado',qty,obs);
+    } else if(type==='implementos'){
+        producto=currentProduct.implementos;
+        estado=document.getElementById('implementos-estado').value;
+        qty=parseInt(document.getElementById('implementos-cantidad').value);
+        obs=document.getElementById('implementos-obs').value;
+        key=producto+'|'+estado;
+        if(!inventory.implementos[key]) inventory.implementos[key]=0;
+        if(action==='remove' && qty>inventory.implementos[key]) { alert('No hay suficiente stock'); return; }
+        inventory.implementos[key]+=(action==='add'?qty:-qty);
+        updateStockView('implementos');
+        addHistory(new Date().toLocaleString(),producto,'N/A',estado,action==='add'?'Agregado':'Retirado',qty,obs);
+    }
+}
+
+// Actualizar número celular
+function updateCellNumber(){
+    const producto=currentProduct.celular;
+    const numero=document.getElementById('celular-nuevo').value.trim();
+    const operador=document.getElementById('celular-operador').value.trim();
+    const obs=document.getElementById('celular-obs').value;
+    if(!producto) return alert('Seleccione un celular');
+    if(!numero) return alert('Ingrese un nuevo número');
+    inventory.celular[producto]={number:numero,operator:operador};
+    document.getElementById('celular-actual').value=numero;
+    addHistory(new Date().toLocaleString(),producto,'N/A','N/A','Actualizado',1,obs);
+    document.getElementById('celular-nuevo').value='';
+    document.getElementById('celular-obs').value='';
+}
+
+// Agregar al historial
+function addHistory(fecha,prod,talla,estado,accion,cant,obs){
+    let tbody=document.getElementById('historial-body');
+    let row=document.createElement('tr');
+
+    if(accion==='Agregado') row.style.color='green';
+    else if(accion==='Retirado') row.style.color='red';
+    else row.style.color='blue';
+
+    let estadoColor = estado === 'Nuevo' ? 'green' : 'orange';
+
+    row.innerHTML=`
+    <td>${fecha}</td>
+    <td>${prod}</td>
+    <td>${talla}</td>
+    <td style="color:${estadoColor}; font-weight:bold;">${estado}</td>
+    <td>${accion}</td>
+    <td>${cant}</td>
+    <td>${obs}</td>
+    `;
+
+    tbody.prepend(row);
+}
+
+// Inicialización
+init();
+
+function abrirSelectorPersonalizado(idSelect, tipo) {
+    const selectOriginal = document.getElementById(idSelect);
+    const contenedor = document.getElementById('contenedorOpciones');
+    const modal = document.getElementById('miModal');
+    
+    contenedor.innerHTML = '';
+
+    Array.from(selectOriginal.options).forEach(opt => {
+        const div = document.createElement('div');
+        div.className = 'opcion-item';
+        div.innerText = opt.text;
+
+        div.onclick = () => {
+            selectOriginal.value = opt.value;
+
+            // 🔥 Detecta si es producto, talla o estado
+            if (idSelect.includes('producto')) {
+                selectProduct(tipo);
             } else {
-                if(current >= qty) {
-                    stockVal.innerText = current - qty;
-                } else {
-                    alert("No hay suficiente stock para quitar");
-                }
+                updateStockView(tipo);
             }
-        }
-    </script>
+
+            modal.style.display = 'none';
+        };
+
+        contenedor.appendChild(div);
+    }); // 👈 ESTA LÍNEA ES CLAVE (CIERRA EL forEach)
+
+    modal.style.display = 'flex';
+}
+
+function login(){
+    const user = document.getElementById('user').value;
+    const pass = document.getElementById('pass').value;
+
+    if(user === "admin" && pass === "1234"){
+        localStorage.setItem("login","ok"); // 🔥 ESTA LÍNEA FALTABA
+
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('panelApp').style.display = 'flex';
+    } else {
+        document.getElementById('errorLogin').innerText = "Usuario o contraseña incorrectos";
+    }
+}
+
+function exportarExcel(){
+    let tabla = document.querySelector("table");
+    let html = tabla.outerHTML;
+
+    let url = 'data:application/vnd.ms-excel,' + encodeURIComponent(html);
+
+    let link = document.createElement("a");
+    link.href = url;
+    link.download = "inventario.xls";
+    link.click();
+}
+
+window.onload = () => {
+    if(localStorage.getItem("login") === "ok"){
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('panelApp').style.display = 'flex';
+    }
+}
+
+function logout(){
+    localStorage.removeItem("login");
+    location.reload();
+}
+</script>
+<!-- Cuadro flotante dinámico -->
+<div id="miModal" class="modal-overlay" onclick="this.style.display='none'">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-titulo">Seleccionar Producto</div>
+        <div id="contenedorOpciones">
+            <!-- Aquí el JavaScript meterá las opciones automáticamente -->
+        </div>
+    </div>
+</div>
+</div>
 </body>
 </html>
