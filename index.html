@@ -17,9 +17,6 @@ body {
     height:100vh;
     box-shadow: 4px 0 20px rgba(0,0,0,0.05);
     border-right:1px solid #eee;
-
-    display: flex;
-    flex-direction: column;
 }
 
 .sidebar h2 {
@@ -233,49 +230,11 @@ tr:hover td {
     background: #ffecf1; border-color: #ff4f81; transform: scale(1.02);
 }
 
-/* AGRUPA BOTONES ARRIBA */
-.menu {
-    margin-top: 10px;
-}
-
-/* FOOTER ABAJO PERFECTO */
-.sidebar-footer {
-    margin-top: auto;
-    display: flex;
-    gap: 10px;
-}
-
-/* BOTONES MÁS FINOS */
-.btn-logout, .btn-excel {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    border-radius: 12px;
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-/* COLORES */
-.btn-logout {
-    background: linear-gradient(45deg, #ff4d6d, #ff758f);
-}
-
-.btn-excel {
-    background: linear-gradient(45deg, #4cc9f0, #4895ef);
-}
-
-/* HOVER */
-.btn-logout:hover,
-.btn-excel:hover {
-    transform: translateY(-2px);
-}
-
 </style>
 </head>
 
 <body>
+    
 <div id="loginScreen" style="
     width:100%;
     height:100vh;
@@ -302,32 +261,25 @@ tr:hover td {
 
         <p id="errorLogin" style="color:red; font-size:0.8rem;"></p>
     </div>
-</div>
+</div>    
+
 <!-- TODO TU HTML ORIGINAL (NO MODIFICADO) -->
 <!-- PEGA EXACTAMENTE LO QUE YA TENÍAS DESDE <div class="sidebar"> HASTA EL FINAL -->
 
 <!-- 👇👇👇 PEGA AQUÍ TU MISMO CÓDIGO SIN CAMBIOS 👇👇👇 -->
 
 <div id="panelApp" style="display:none;">
+
 <div class="sidebar">
     <h2>Inventario PRC</h2>
-
-    <!-- 👇 AGRUPADOR -->
-    <div class="menu">
-        <button onclick="showPanel('ropa')">👕 Ropa</button>
-        <button onclick="showPanel('calzado')">👞 Calzado</button>
-        <button onclick="showPanel('celulares')">📱 Celulares</button>
-        <button onclick="showPanel('utiles')">🗃️ Útiles de Oficina</button>
-        <button onclick="showPanel('implementos')">➕ Implementos</button>
-    </div>
-
-    <!-- 👇 FOOTER -->
-    <div class="sidebar-footer">
-        <button class="btn-excel" onclick="exportarExcel()">📊 Exportar</button>
-<button class="btn-logout" onclick="logout()">🚪 Salir</button>
-    </div>
+    <button onclick="showPanel('ropa')">👕 Ropa</button>
+    <button onclick="showPanel('calzado')">👞 Calzado</button>
+    <button onclick="showPanel('celulares')">📱 Celulares</button>
+    <button onclick="showPanel('utiles')">🗃️ Útiles de Oficina</button>
+    <button onclick="showPanel('implementos')">➕ Implementos</button>
 </div>
 
+<div class="main">
 
     <!-- PANEL ROPA -->
     <div class="card" id="panel-ropa" style="display:none;">
@@ -595,6 +547,20 @@ function addHistory(fecha,prod,talla,estado,accion,cant,obs){
     `;
 
     tbody.prepend(row);
+    fetch("https://script.google.com/macros/s/AKfycbwAEzjmlahMSrZVOEw11URz3ZDNPmYv5q-dJjzdh5tWRm8VNxuI_9BDsE92bSjcrUzv/exec", {
+    method: "POST",
+    body: JSON.stringify({
+        producto: prod,
+        talla: talla,
+        estado: estado,
+        accion: accion,
+        cantidad: cant,
+        obs: obs
+    })
+})
+.then(res => res.text())
+.then(res => console.log("Enviado:", res))
+.catch(err => console.error("Error:", err));
 }
 
 // Inicialización
@@ -636,8 +602,6 @@ function login(){
     const pass = document.getElementById('pass').value;
 
     if(user === "admin" && pass === "1234"){
-        localStorage.setItem("login","ok"); // 🔥 ESTA LÍNEA FALTABA
-
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('panelApp').style.display = 'flex';
     } else {
@@ -645,29 +609,6 @@ function login(){
     }
 }
 
-function exportarExcel(){
-    let tabla = document.querySelector("table");
-    let html = tabla.outerHTML;
-
-    let url = 'data:application/vnd.ms-excel,' + encodeURIComponent(html);
-
-    let link = document.createElement("a");
-    link.href = url;
-    link.download = "inventario.xls";
-    link.click();
-}
-
-window.onload = () => {
-    if(localStorage.getItem("login") === "ok"){
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('panelApp').style.display = 'flex';
-    }
-}
-
-function logout(){
-    localStorage.removeItem("login");
-    location.reload();
-}
 </script>
 <!-- Cuadro flotante dinámico -->
 <div id="miModal" class="modal-overlay" onclick="this.style.display='none'">
