@@ -412,19 +412,29 @@ function showPanel(panel){
 
 // Selección producto
 function selectProduct(type){
-    const sel=document.getElementById(type+'-producto');
-    currentProduct[type]=sel.value;
+    const sel = document.getElementById(type+'-producto');
+    currentProduct[type] = sel.value;
 
-    if(type==='celular'){
-        if(!inventory.celular[currentProduct.celular]) inventory.celular[currentProduct.celular]={number:'',operator:''};
-        document.getElementById('celular-actual').value=inventory.celular[currentProduct.celular].number;
-        document.getElementById('celular-operador').value=inventory.celular[currentProduct.celular].operator;
-        document.getElementById('celular-nuevo').value='';
-        document.getElementById('celular-obs').value='';
+    if(type === 'celular'){
+        // Reemplazo aquí
+        if(!inventory.celular[currentProduct.celular]) {
+            inventory.celular[currentProduct.celular] = {number:'',operator:''};
+        }
+        document.getElementById('celular-actual').value = inventory.celular[currentProduct.celular].number || "";
+        document.getElementById('celular-operador').value = inventory.celular[currentProduct.celular].operator || "";
+        
+        // Limpieza de inputs
+        document.getElementById('celular-nuevo').value = '';
+        document.getElementById('celular-obs').value = '';
     } else {
         updateStockView(type);
-        document.getElementById(type+'-obs').value='';
+        document.getElementById(type+'-obs').value = '';
     }
+
+    // Actualizar stock visual siempre, con retraso
+    setTimeout(() => {
+        updateStockView(type);
+    }, 100);
 }
 
 // Actualizar stock visual
@@ -635,16 +645,12 @@ function cargarDatos(){
     .then(res => res.json())
     .then(data => {
 
-        // 🔥 reiniciar inventario
         inventory = {ropa:{}, calzado:{}, celular:{}, utiles:{}, implementos:{}};
 
-        // 🔥 limpiar historial visual
         document.getElementById('historial-body').innerHTML = "";
 
-        // 🔥 recorrer datos (saltar encabezado)
         data.slice(1).forEach(row => {
 
-            let fecha = row[0];
             let producto = row[1];
             let talla = row[2];
             let estado = row[3];
@@ -656,14 +662,15 @@ function cargarDatos(){
 
             let tipo = detectarTipo(producto);
 
-            // 🔥 celulares
+            if(!tipo) return; // 👈 evita romper todo
+
+            // 🔥 CELULARES
             if(tipo === 'celular'){
                 inventory.celular[producto] = {
                     number: numero || "",
                     operator: operador || ""
                 };
             } 
-            // 🔥 demás productos
             else {
                 let key = producto + "|" + talla + "|" + estado;
 
@@ -672,11 +679,10 @@ function cargarDatos(){
                 inventory[tipo][key] += (accion === "Agregado" ? cantidad : -cantidad);
             }
 
-            // 🔥 reconstruir historial visual
-            addHistory(fecha, producto, talla, estado, accion, cantidad, obs);
+            addHistory(row[0], producto, talla, estado, accion, cantidad, obs);
         });
 
-        console.log("✅ Datos cargados correctamente");
+        console.log("✅ Inventario reconstruido:", inventory);
     });
 }
 
@@ -686,6 +692,8 @@ function detectarTipo(producto){
     if(utilesList.includes(producto)) return 'utiles';
     if(implementosList.includes(producto)) return 'implementos';
     if(celularList.includes(producto)) return 'celular';
+
+    return null; // 👈 evita errores
 }
 
 </script>
