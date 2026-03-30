@@ -523,6 +523,24 @@ function updateCellNumber(){
     addHistory(new Date().toLocaleString(),producto,'N/A','N/A','Actualizado',1,obs);
     document.getElementById('celular-nuevo').value='';
     document.getElementById('celular-obs').value='';
+  
+    fetch("https://script.google.com/macros/s/AKfycbz-6MWjzw9IULXxu-lslKq_I0NvfRBH2n-j-r9rCXnqz8Mg-c3pBkW6iIxQsq3ppGSw/exec", {
+    method: "POST",
+    body: JSON.stringify({
+        producto: producto,
+        talla: "N/A",
+        estado: "N/A",
+        accion: "Actualización de número",
+        cantidad: 1,
+        obs: obs,
+        numero: numero,
+        operador: operador
+    })
+})
+.then(res => res.text())
+.then(res => console.log("Celular guardado:", res))
+.catch(err => console.error("Error:", err));
+    
 }
 
 // Agregar al historial
@@ -547,7 +565,7 @@ function addHistory(fecha,prod,talla,estado,accion,cant,obs){
     `;
 
     tbody.prepend(row);
-    fetch("https://script.google.com/macros/s/AKfycbwAEzjmlahMSrZVOEw11URz3ZDNPmYv5q-dJjzdh5tWRm8VNxuI_9BDsE92bSjcrUzv/exec", {
+    fetch("https://script.google.com/macros/s/AKfycbz-6MWjzw9IULXxu-lslKq_I0NvfRBH2n-j-r9rCXnqz8Mg-c3pBkW6iIxQsq3ppGSw/exec", {
     method: "POST",
     body: JSON.stringify({
         producto: prod,
@@ -555,7 +573,9 @@ function addHistory(fecha,prod,talla,estado,accion,cant,obs){
         estado: estado,
         accion: accion,
         cantidad: cant,
-        obs: obs
+        obs: obs,
+        numero: "",
+        operador: ""
     })
 })
 .then(res => res.text())
