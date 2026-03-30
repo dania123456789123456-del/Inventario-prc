@@ -230,6 +230,27 @@ tr:hover td {
     background: #ffecf1; border-color: #ff4f81; transform: scale(1.02);
 }
 
+.historial-container {
+    max-height: 300px;   /* altura máxima del historial */
+    overflow-y: auto;    /* scroll vertical */
+    margin-top: 0.5rem;
+}
+
+/* Scroll bonito */
+.historial-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.historial-container::-webkit-scrollbar-thumb {
+    background: #ff6a88;
+    border-radius: 10px;
+}
+
+.historial-container::-webkit-scrollbar-track {
+    background: #ffe4ec;
+    border-radius: 10px;
+}
+
 </style>
 </head>
 
@@ -368,7 +389,8 @@ tr:hover td {
 
     <!-- HISTORIAL GENERAL -->
     <div class="card">
-        <h3>📜 Historial General</h3>
+    <h3>📜 Historial General</h3>
+    <div class="historial-container">
         <table>
             <thead>
                 <tr><th>Fecha</th><th>Producto</th><th>Talla/N°</th><th>Estado</th><th>Acción</th><th>Cantidad</th><th>Observación</th></tr>
@@ -376,6 +398,7 @@ tr:hover td {
             <tbody id="historial-body"></tbody>
         </table>
     </div>
+</div>
 
 </div>
 
@@ -387,7 +410,7 @@ let currentProduct={ropa:'', calzado:'', celular:'', utiles:'', implementos:''};
 // Productos
 const ropaList=['Camisa Amarilla','Camisa Blanca','Pantalón Marrón','Chompa Azul']; // <--- AQUÍ agregas más ropa
 const calzadoList=['Botín Negro','Zapato Negro','Forcei']; // <--- AQUÍ agregas más calzado
-const celularList=['Samsung','iPhone']; // <--- AQUÍ agregas más celulares
+const celularList=['Samsung','iPhone', 'juego']; // <--- AQUÍ agregas más celulares
 const utilesList=['Lapicero','Cuaderno A4','Archivador','Cinta de Embalaje','Papel Bond']; // <--- AQUÍ agregas más útiles
 const implementosList=['Batos','Linterna','Cartuchera','Vara']; // <--- AQUÍ agregas más implementos
 
@@ -593,6 +616,29 @@ function addHistory(fecha,prod,talla,estado,accion,cant,obs){
 .catch(err => console.error("Error:", err));
 }
 
+function addHistoryVisual(fecha, prod, talla, estado, accion, cant, obs) {
+    let tbody = document.getElementById('historial-body');
+    let row = document.createElement('tr');
+
+    if(accion==='Agregado') row.style.color='green';
+    else if(accion==='Retirado') row.style.color='red';
+    else row.style.color='blue';
+
+    let estadoColor = estado === 'Nuevo' ? 'green' : 'orange';
+
+    row.innerHTML = `
+        <td>${fecha}</td>
+        <td>${prod}</td>
+        <td>${talla}</td>
+        <td style="color:${estadoColor}; font-weight:bold;">${estado}</td>
+        <td>${accion}</td>
+        <td>${cant}</td>
+        <td>${obs}</td>
+    `;
+
+    tbody.prepend(row);
+}
+
 // Inicialización
 init();
 cargarDatos();
@@ -644,13 +690,14 @@ function cargarDatos(){
     fetch("https://script.google.com/macros/s/AKfycbz-6MWjzw9IULXxu-lslKq_I0NvfRBH2n-j-r9rCXnqz8Mg-c3pBkW6iIxQsq3ppGSw/exec")
     .then(res => res.json())
     .then(data => {
-
+        // Reiniciar inventario
         inventory = {ropa:{}, calzado:{}, celular:{}, utiles:{}, implementos:{}};
 
+        // Limpiar historial visual
         document.getElementById('historial-body').innerHTML = "";
 
+        // Recorrer filas del Google Sheet
         data.slice(1).forEach(row => {
-
             let producto = row[1];
             let talla = row[2];
             let estado = row[3];
@@ -661,31 +708,24 @@ function cargarDatos(){
             let operador = row[8];
 
             let tipo = detectarTipo(producto);
+            if(!tipo) return; // Evita errores
 
-            if(!tipo) return; // 👈 evita romper todo
-
-            // 🔥 CELULARES
+            // 🔹 Reconstruir inventario
             if(tipo === 'celular'){
-                inventory.celular[producto] = {
-                    number: numero || "",
-                    operator: operador || ""
-                };
-            } 
-            else {
+                inventory.celular[producto] = {number: numero || "", operator: operador || ""};
+            } else {
                 let key = producto + "|" + talla + "|" + estado;
-
                 if(!inventory[tipo][key]) inventory[tipo][key] = 0;
-
                 inventory[tipo][key] += (accion === "Agregado" ? cantidad : -cantidad);
             }
 
-            addHistory(row[0], producto, talla, estado, accion, cantidad, obs);
+            // 🔹 Solo mostrar historial en tabla, NO enviar POST
+            addHistoryVisual(row[0], producto, talla, estado, accion, cantidad, obs);
         });
 
         console.log("✅ Inventario reconstruido:", inventory);
     });
 }
-
 function detectarTipo(producto){
     if(ropaList.includes(producto)) return 'ropa';
     if(calzadoList.includes(producto)) return 'calzado';
