@@ -585,6 +585,7 @@ function addHistory(fecha,prod,talla,estado,accion,cant,obs){
 
 // Inicialización
 init();
+cargarDatos();
 
 function abrirSelectorPersonalizado(idSelect, tipo) {
     const selectOriginal = document.getElementById(idSelect);
@@ -627,6 +628,64 @@ function login(){
     } else {
         document.getElementById('errorLogin').innerText = "Usuario o contraseña incorrectos";
     }
+}
+
+function cargarDatos(){
+    fetch("https://script.google.com/macros/s/AKfycbz-6MWjzw9IULXxu-lslKq_I0NvfRBH2n-j-r9rCXnqz8Mg-c3pBkW6iIxQsq3ppGSw/exec")
+    .then(res => res.json())
+    .then(data => {
+
+        // 🔥 reiniciar inventario
+        inventory = {ropa:{}, calzado:{}, celular:{}, utiles:{}, implementos:{}};
+
+        // 🔥 limpiar historial visual
+        document.getElementById('historial-body').innerHTML = "";
+
+        // 🔥 recorrer datos (saltar encabezado)
+        data.slice(1).forEach(row => {
+
+            let fecha = row[0];
+            let producto = row[1];
+            let talla = row[2];
+            let estado = row[3];
+            let accion = row[4];
+            let cantidad = parseInt(row[5]) || 0;
+            let obs = row[6];
+            let numero = row[7];
+            let operador = row[8];
+
+            let tipo = detectarTipo(producto);
+
+            // 🔥 celulares
+            if(tipo === 'celular'){
+                inventory.celular[producto] = {
+                    number: numero || "",
+                    operator: operador || ""
+                };
+            } 
+            // 🔥 demás productos
+            else {
+                let key = producto + "|" + talla + "|" + estado;
+
+                if(!inventory[tipo][key]) inventory[tipo][key] = 0;
+
+                inventory[tipo][key] += (accion === "Agregado" ? cantidad : -cantidad);
+            }
+
+            // 🔥 reconstruir historial visual
+            addHistory(fecha, producto, talla, estado, accion, cantidad, obs);
+        });
+
+        console.log("✅ Datos cargados correctamente");
+    });
+}
+
+function detectarTipo(producto){
+    if(ropaList.includes(producto)) return 'ropa';
+    if(calzadoList.includes(producto)) return 'calzado';
+    if(utilesList.includes(producto)) return 'utiles';
+    if(implementosList.includes(producto)) return 'implementos';
+    if(celularList.includes(producto)) return 'celular';
 }
 
 </script>
