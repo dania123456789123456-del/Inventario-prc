@@ -712,9 +712,22 @@ function cargarDatos(){
 
             // 🔹 Reconstruir inventario
             if(tipo === 'celular'){
-                inventory.celular[producto] = {number: numero || "", operator: operador || ""};
-            } else {
-                let key = producto + "|" + talla + "|" + estado;
+    // Solo guardar si hay número (última actualización válida)
+    if(numero){
+        inventory.celular[producto] = {
+            number: numero,
+            operator: operador || ""
+        };
+    }
+}
+             else {
+                let key;
+
+if(tipo === 'utiles' || tipo === 'implementos'){
+    key = producto + "|" + estado;
+} else {
+    key = producto + "|" + talla + "|" + estado;
+}
                 if(!inventory[tipo][key]) inventory[tipo][key] = 0;
                 inventory[tipo][key] += (accion === "Agregado" ? cantidad : -cantidad);
             }
