@@ -542,9 +542,33 @@ function updateStockView(type){
     }
 }
 
+// 🔥 SISTEMA DE CONFIRMACIÓN
+let accionPendiente = null;
+
+function pedirConfirmacion(mensaje, callback){
+    document.getElementById("confirmText").innerText = mensaje;
+    document.getElementById("confirmModal").style.display = "flex";
+    accionPendiente = callback;
+}
+
+function ejecutarConfirmacion(respuesta){
+    document.getElementById("confirmModal").style.display = "none";
+
+    if(respuesta && accionPendiente){
+        accionPendiente(); // ejecuta la acción real
+    }
+}
+
 // Modificar stock
 function modifyStock(type,action){
-    let producto, talla='', estado, qty, obs, key;
+
+    let texto = action === 'add' 
+        ? "¿Seguro que deseas AGREGAR este producto?" 
+        : "¿Seguro que deseas RETIRAR este producto?";
+
+    pedirConfirmacion(texto, function(){
+
+        let producto, talla='', estado, qty, obs, key;
     if(type==='ropa'){
         producto=currentProduct.ropa;
         talla=document.getElementById('ropa-talla').value;
@@ -593,8 +617,9 @@ addHistory(new Date().toLocaleString(),producto,talla,estado,action==='add'?'Agr
         updateStockView('implementos');
         addHistory(new Date().toLocaleString(),producto,'N/A',estado,action==='add'?'Agregado':'Retirado',qty,obs);
     }
-}
 
+    }); // 👈 ESTE CIERRA la confirmación
+}
 // Actualizar número celular
 function updateCellNumber(){
     const producto=currentProduct.celular;
@@ -811,6 +836,28 @@ function detectarTipo(producto){
         </div>
     </div>
 </div>
+
+<!-- 🔥 MODAL CONFIRMAR ACCIÓN -->
+<div id="confirmModal" class="modal-overlay" onclick="this.style.display='none'">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        
+        <div class="modal-titulo" id="confirmText">
+            ¿Confirmar acción?
+        </div>
+
+        <div style="text-align:center; margin-top:15px;">
+            <button class="btn btn-add" onclick="ejecutarConfirmacion(true)">
+                ✔ Confirmar
+            </button>
+
+            <button class="btn btn-remove" onclick="ejecutarConfirmacion(false)">
+                ✖ Cancelar
+            </button>
+        </div>
+
+    </div>
+</div>
+
 </div>
 </body>
 </html>
