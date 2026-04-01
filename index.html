@@ -9,22 +9,14 @@ body {
     margin:0;
     display:flex;
     background: linear-gradient(135deg, #fdfbfb, #ebedee);
-    overflow: hidden; /* 🔥 evita que se corte */
+    overflow-x: hidden; /* 🔥 evita que se corte */
 }
 
 /* ====== SIDEBAR CLARO ====== */
 .sidebar {
-    width: 35%;
-    max-width: 220px;
-    min-width: 140px;
-    background: #ffffff;
-    color:#444;
-    padding:1rem;
-    height:100vh;
-    box-shadow: 4px 0 20px rgba(0,0,0,0.05);
-    border-right:1px solid #eee;
-    overflow-y: auto; /* 🔥 scroll SOLO aquí */
-}
+    width: 30%;
+min-width: 180px;
+max-width: 260px;
     background: #ffffff;
     color:#444;
     padding:1.5rem 1rem;
@@ -63,9 +55,8 @@ body {
 /* ====== MAIN ====== */
 .main {
     flex:1;
-    padding:0.8rem;
-    overflow-y: auto;   /* scroll vertical */
-    overflow-x: hidden; /* ❌ elimina scroll lateral */
+    padding:1rem;
+    overflow-x: auto;
 }
 
 /* ====== CARDS ====== */
@@ -100,7 +91,6 @@ h3 {
 
 input, select, textarea {
     width:100%;
-    max-width:100%;
     padding:9px;
     font-size:0.85rem;
     border-radius:10px;
@@ -174,8 +164,6 @@ button.btn:hover {
 /* ====== TABLA ====== */
 table {
     width:100%;
-    min-width:600px; /* 🔥 scroll SOLO en historial */
-}
     border-collapse:collapse;
     margin-top:0.5rem;
     border-radius:12px;
@@ -250,10 +238,8 @@ tr:hover td {
 }
 
 .historial-container {
-    max-height: 300px;
-    overflow-y: auto;
-    overflow-x: auto; /* 🔥 scroll horizontal SOLO aquí */
-}
+    max-height: 300px;   /* altura máxima del historial */
+    overflow-y: auto;    /* scroll vertical */
     margin-top: 0.5rem;
 }
 
@@ -355,7 +341,7 @@ tr:hover td {
 
 <!-- 👇👇👇 PEGA AQUÍ TU MISMO CÓDIGO SIN CAMBIOS 👇👇👇 -->
 
-<div id="panelApp" style="display:none; width:100%; height:100vh; display:flex;">
+<div id="panelApp" style="display:none;">
 
 <div class="sidebar">
     <h2>Inventario PRC</h2>
