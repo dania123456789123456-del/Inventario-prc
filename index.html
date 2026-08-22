@@ -435,8 +435,8 @@ tr:hover td {
 }
 
 .reporte-logo-container img {
-    max-width: 60px;
-    max-height: 60px;
+    max-width: 130px;
+    max-height: 100px;
     object-fit: contain;
 }
 
@@ -772,10 +772,85 @@ function init(){
     });
 }
 
+// ============================================================
+// 🆕 LIMPIAR CAMPOS AL CAMBIAR DE SECCIÓN
+// Deja todo en blanco (Producto, Talla, Estado, Cantidad,
+// Observación, Empleado, Stock) para que el usuario tenga que
+// seleccionar de nuevo cada vez que entra a una sección.
+// ============================================================
+function resetCamposPanel(tipo){
+
+    if(tipo === 'celulares'){
+        const producto = document.getElementById('celular-producto');
+        if(producto) producto.value = '';
+        const operador = document.getElementById('celular-operador');
+        if(operador) operador.value = '';
+        const actual = document.getElementById('celular-actual');
+        if(actual) actual.value = '';
+        const nuevo = document.getElementById('celular-nuevo');
+        if(nuevo) nuevo.value = '';
+        const obs = document.getElementById('celular-obs');
+        if(obs) obs.value = '';
+        currentProduct.celular = '';
+        return;
+    }
+
+    if(tipo === 'buscarEmpleado'){
+        const input = document.getElementById('buscar-empleado-input');
+        if(input) input.value = '';
+        const lista = document.getElementById('buscar-empleado-lista');
+        if(lista){ lista.innerHTML=''; lista.style.display='none'; }
+        const resultado = document.getElementById('buscar-empleado-resultado');
+        if(resultado) resultado.style.display = 'none';
+        const tbody = document.getElementById('buscar-empleado-historial-body');
+        if(tbody) tbody.innerHTML = '';
+        empleadoSeleccionadoBusqueda = null;
+        return;
+    }
+
+    // ropa, calzado, utiles, implementos
+    const producto = document.getElementById(tipo+'-producto');
+    if(producto) producto.value = '';
+
+    const talla = document.getElementById(tipo+'-talla');
+    if(talla) talla.value = '';
+
+    const estado = document.getElementById(tipo+'-estado');
+    if(estado) estado.value = '';
+
+    const cantidad = document.getElementById(tipo+'-cantidad');
+    if(cantidad) cantidad.value = 1;
+
+    const obs = document.getElementById(tipo+'-obs');
+    if(obs) obs.value = '';
+
+    const empleadoInput = document.getElementById(tipo+'-empleado');
+    if(empleadoInput) empleadoInput.value = '';
+
+    const empleadoLista = document.getElementById(tipo+'-empleado-lista');
+    if(empleadoLista){ empleadoLista.innerHTML = ''; empleadoLista.style.display = 'none'; }
+
+    const fecha = document.getElementById(tipo+'-fecha');
+    if(fecha) fecha.valueAsDate = new Date();
+
+    currentProduct[tipo] = '';
+
+    const stock = document.getElementById(tipo+'-stock');
+    if(stock){ stock.innerText = '0'; stock.style.color = ''; }
+}
+
 // Mostrar panel
 function showPanel(panel){
     ['ropa','calzado','celulares','utiles','implementos','buscarEmpleado'].forEach(p=>document.getElementById('panel-'+p).style.display='none');
     document.getElementById('panel-'+panel).style.display='block';
+
+    // 🆕 Limpiar campos de la sección a la que se entra
+    resetCamposPanel(panel);
+
+    // 🆕 Reiniciar el scroll de la vista al cambiar de sección
+    const mainEl = document.querySelector('.main');
+    if(mainEl) mainEl.scrollTop = 0;
+    window.scrollTo(0,0);
 }
 
 // Selección producto
