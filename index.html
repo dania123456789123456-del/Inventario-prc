@@ -173,7 +173,7 @@ button.btn:hover {
 /* ====== TABLA ====== */
 table {
     width:100%;
-    min-width:600px; /* 🔥 scroll SOLO en historial */
+    min-width:700px; /* 🔥 scroll SOLO en historial */
 }
     border-collapse:collapse;
     margin-top:0.5rem;
@@ -316,6 +316,182 @@ tr:hover td {
     }
 }
 
+/* ====================================================== */
+/* ============  NUEVO: BUSCADOR DE EMPLEADO  ============ */
+/* ====================================================== */
+.empleado-autocomplete {
+    position: relative;
+}
+
+.empleado-lista {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ffccd5;
+    border-radius: 10px;
+    max-height: 160px;
+    overflow-y: auto;
+    z-index: 200;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    margin-top: 4px;
+}
+
+.empleado-item {
+    padding: 9px 12px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: #444;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.empleado-item:hover {
+    background: #ffe4ec;
+}
+
+/* ====================================================== */
+/* ===========  NUEVO: REPORTE / FICHA EMPLEADO  ========= */
+/* ====================================================== */
+.reporte-page {
+    width: 794px; /* Ancho A4 a 96dpi */
+    min-height: 1123px; /* Alto A4 a 96dpi */
+    display: flex;
+    font-family: 'Poppins', sans-serif;
+    background: #2b1418;
+    position: relative;
+    overflow: hidden;
+}
+
+.reporte-triangulo {
+    position: absolute;
+    top: 0; left: 0;
+    width: 130px; height: 130px;
+    background: #ff4d4d;
+    clip-path: polygon(0 0, 100% 0, 0 100%);
+    z-index: 1;
+}
+
+.reporte-izquierda {
+    width: 280px;
+    min-width: 280px;
+    background: white;
+    padding: 35px 24px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 2;
+}
+
+.reporte-foto-container {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 10px auto 20px;
+    background: #eef3f8;
+    border: 4px solid #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.reporte-foto-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.reporte-nombre {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #7a4b3a;
+    text-align: center;
+    margin: 5px 0 25px;
+    line-height: 1.25;
+}
+
+.reporte-datos-titulo {
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #333;
+    border-bottom: 2px solid #333;
+    padding-bottom: 6px;
+    margin-bottom: 14px;
+}
+
+.reporte-dato {
+    color: #555;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    word-break: break-word;
+}
+
+.reporte-logo-container {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 20px;
+}
+
+.reporte-logo-container img {
+    max-width: 60px;
+    max-height: 60px;
+    object-fit: contain;
+}
+
+.reporte-derecha {
+    flex: 1;
+    background: #2b1418;
+    color: white;
+    padding: 35px 28px;
+}
+
+.reporte-historial-titulo {
+    font-size: 2rem;
+    font-weight: 800;
+    border-bottom: 2px solid #7a4b3a;
+    padding-bottom: 12px;
+    margin-bottom: 25px;
+}
+
+.reporte-fecha {
+    color: #c98a5e;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+}
+
+.reporte-item {
+    border-left: 2px solid #5a4038;
+    padding-left: 22px;
+    padding-bottom: 28px;
+    position: relative;
+}
+
+.reporte-item::before {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #999;
+}
+
+.reporte-item ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.reporte-item li {
+    margin-bottom: 7px;
+    font-size: 0.88rem;
+    color: #ddd;
+}
+
 </style>
 </head>
 
@@ -349,10 +525,7 @@ tr:hover td {
     </div>
 </div>    
 
-<!-- TODO TU HTML ORIGINAL (NO MODIFICADO) -->
-<!-- PEGA EXACTAMENTE LO QUE YA TENÍAS DESDE <div class="sidebar"> HASTA EL FINAL -->
-
-<!-- 👇👇👇 PEGA AQUÍ TU MISMO CÓDIGO SIN CAMBIOS 👇👇👇 -->
+<!-- TODO TU HTML ORIGINAL (NO MODIFICADO EN SU ESTRUCTURA) -->
 
 <div id="panelApp" style="display:none; width:100%; height:100vh; display:flex;">
 
@@ -363,6 +536,7 @@ tr:hover td {
     <button onclick="showPanel('celulares')">📱 Celulares</button>
     <button onclick="showPanel('utiles')">🗃️ Útiles de Oficina</button>
     <button onclick="showPanel('implementos')">➕ Implementos</button>
+    <button onclick="showPanel('buscarEmpleado')">🔍 Buscar Empleado</button>
 </div>
 
 <div class="main">
@@ -370,6 +544,14 @@ tr:hover td {
     <!-- PANEL ROPA -->
     <div class="card" id="panel-ropa" style="display:none;">
         <h3>Ropa</h3>
+        <div class="input-group"><label>Fecha</label><input type="date" id="ropa-fecha"></div>
+        <div class="input-group">
+            <label>Empleado</label>
+            <div class="empleado-autocomplete">
+                <input type="text" id="ropa-empleado" placeholder="Escribe iniciales del nombre o apellido..." oninput="filtrarEmpleados('ropa')" autocomplete="off">
+                <div id="ropa-empleado-lista" class="empleado-lista"></div>
+            </div>
+        </div>
         <div class="input-group"><label>Producto</label><select id="ropa-producto" onmousedown="event.preventDefault(); abrirSelectorPersonalizado('ropa-producto', 'ropa')">
 </select>
 </div>
@@ -389,6 +571,14 @@ tr:hover td {
     <!-- PANEL CALZADO -->
     <div class="card" id="panel-calzado" style="display:none;">
         <h3>Calzado</h3>
+        <div class="input-group"><label>Fecha</label><input type="date" id="calzado-fecha"></div>
+        <div class="input-group">
+            <label>Empleado</label>
+            <div class="empleado-autocomplete">
+                <input type="text" id="calzado-empleado" placeholder="Escribe iniciales del nombre o apellido..." oninput="filtrarEmpleados('calzado')" autocomplete="off">
+                <div id="calzado-empleado-lista" class="empleado-lista"></div>
+            </div>
+        </div>
         <div class="input-group"><label>Producto</label><select id="calzado-producto" onmousedown="event.preventDefault(); abrirSelectorPersonalizado('calzado-producto', 'calzado')">
 </select>
 </div>
@@ -405,7 +595,7 @@ tr:hover td {
 
     </div>
 
-    <!-- PANEL CELULARES -->
+    <!-- PANEL CELULARES (SIN CAMBIOS DE EMPLEADO, SOLO SIN HORA) -->
     <div class="card" id="panel-celulares" style="display:none;">
         <h3>Celulares</h3>
         <div class="input-group"><label>Producto</label><select id="celular-producto" onmousedown="event.preventDefault(); abrirSelectorPersonalizado('celular-producto', 'celular')">
@@ -420,6 +610,14 @@ tr:hover td {
     <!-- PANEL UTILES DE OFICINA -->
     <div class="card" id="panel-utiles" style="display:none;">
         <h3>Útiles de Oficina</h3>
+        <div class="input-group"><label>Fecha</label><input type="date" id="utiles-fecha"></div>
+        <div class="input-group">
+            <label>Empleado</label>
+            <div class="empleado-autocomplete">
+                <input type="text" id="utiles-empleado" placeholder="Escribe iniciales del nombre o apellido..." oninput="filtrarEmpleados('utiles')" autocomplete="off">
+                <div id="utiles-empleado-lista" class="empleado-lista"></div>
+            </div>
+        </div>
         <div class="input-group"><label>Producto</label><select id="utiles-producto" onmousedown="event.preventDefault(); abrirSelectorPersonalizado('utiles-producto', 'utiles')">
 </select
 </select></div>
@@ -438,6 +636,14 @@ tr:hover td {
     <!-- PANEL IMPLEMENTOS -->
     <div class="card" id="panel-implementos" style="display:none;">
         <h3>Implementos</h3>
+        <div class="input-group"><label>Fecha</label><input type="date" id="implementos-fecha"></div>
+        <div class="input-group">
+            <label>Empleado</label>
+            <div class="empleado-autocomplete">
+                <input type="text" id="implementos-empleado" placeholder="Escribe iniciales del nombre o apellido..." oninput="filtrarEmpleados('implementos')" autocomplete="off">
+                <div id="implementos-empleado-lista" class="empleado-lista"></div>
+            </div>
+        </div>
         <div class="input-group"><label>Producto</label><select id="implementos-producto" onmousedown="event.preventDefault(); abrirSelectorPersonalizado('implementos-producto', 'implementos')">
 </select></div>
         <div class="input-group"><label>Estado</label><select id="implementos-estado" onmousedown="event.preventDefault(); abrirSelectorPersonalizado('implementos-estado','implementos')"><option>Nuevo</option><option>Usado</option></select></div>
@@ -452,13 +658,40 @@ tr:hover td {
 
     </div>
 
+    <!-- PANEL NUEVO: BUSCAR EMPLEADO -->
+    <div class="card" id="panel-buscarEmpleado" style="display:none;">
+        <h3>🔍 Buscar Empleado</h3>
+        <div class="input-group">
+            <label>Nombre del empleado</label>
+            <div class="empleado-autocomplete">
+                <input type="text" id="buscar-empleado-input" placeholder="Escribe iniciales del nombre o apellido..." oninput="filtrarEmpleadoBusqueda()" autocomplete="off">
+                <div id="buscar-empleado-lista" class="empleado-lista"></div>
+            </div>
+        </div>
+
+        <div id="buscar-empleado-resultado" style="display:none;">
+            <div class="historial-container">
+                <table>
+                    <thead>
+                        <tr><th>Fecha</th><th>Producto</th><th>Talla/N°</th><th>Estado</th><th>Acción</th><th>Cantidad</th><th>Observación</th></tr>
+                    </thead>
+                    <tbody id="buscar-empleado-historial-body"></tbody>
+                </table>
+            </div>
+            <div style="margin-top:15px;">
+                <button class="btn btn-add" onclick="descargarReporteImagen()">🖼️ Descargar Imagen</button>
+                <button class="btn btn-update" onclick="descargarReportePDF()">📄 Descargar PDF</button>
+            </div>
+        </div>
+    </div>
+
     <!-- HISTORIAL GENERAL -->
     <div class="card">
     <h3>📜 Historial General</h3>
     <div class="historial-container">
         <table>
             <thead>
-                <tr><th>Fecha</th><th>Producto</th><th>Talla/N°</th><th>Estado</th><th>Acción</th><th>Cantidad</th><th>Observación</th></tr>
+                <tr><th>Fecha</th><th>Producto</th><th>Talla/N°</th><th>Estado</th><th>Acción</th><th>Cantidad</th><th>Observación</th><th>Empleado</th></tr>
             </thead>
             <tbody id="historial-body"></tbody>
         </table>
@@ -466,6 +699,12 @@ tr:hover td {
 </div>
 
 </div>
+
+<!-- Contenedor oculto donde se arma la ficha del empleado para exportar -->
+<div id="reporteHidden" style="position:absolute; left:-9999px; top:0;"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
 // Datos iniciales
@@ -479,6 +718,41 @@ const celularList=['Samsung','iPhone', 'juego']; // <--- AQUÍ agregas más celu
 const utilesList=['Lapicero','Cuaderno A4','Archivador','Cinta de Embalaje','Papel Bond']; // <--- AQUÍ agregas más útiles
 const implementosList=['Batos','Linterna','Cartuchera','Vara']; // <--- AQUÍ agregas más implementos
 
+// ============================================================
+// 🆕 EMPLEADOS: agrega aquí a cada empleado de tu empresa.
+// - nombre: nombre completo (se usa para buscar por iniciales)
+// - dni, unidad, celular, correo: datos que salen en la ficha
+// - foto: enlace directo a una imagen (debe ser público, ej. subida
+//   a Imgur, Google Drive con enlace público, etc.). Si el enlace no
+//   permite CORS, la foto podría no verse en el PDF/Imagen exportado.
+// ============================================================
+const empleados = [
+    {
+        nombre: "Jorge Luis Gonzales Arenas",
+        dni: "",
+        unidad: "",
+        celular: "",
+        correo: "",
+        foto: "" // <--- pega aquí el link de la foto de este empleado
+    },
+    // 👇 Copia el bloque de arriba para agregar más empleados 👇
+    // {
+    //     nombre: "Nombre Apellido",
+    //     dni: "",
+    //     unidad: "",
+    //     celular: "",
+    //     correo: "",
+    //     foto: ""
+    // },
+];
+
+// 🆕 LOGO DE LA EMPRESA: pega aquí el link directo a tu logo (público)
+const logoEmpresa = ""; // <--- pega aquí el link del logo de PRC
+
+// 🆕 Guardamos todo el historial en memoria para poder buscar por empleado
+let historialData = [];
+let empleadoSeleccionadoBusqueda = null;
+
 // Inicialización
 function init(){
     let select;
@@ -490,11 +764,17 @@ function init(){
 
     let tallaRopa=document.getElementById('ropa-talla'); ['S','M','L','XL','XXL','XXXL'].forEach(t=>tallaRopa.add(new Option(t)));
     let tallaCalzado=document.getElementById('calzado-talla'); for(let i=34;i<=60;i++) tallaCalzado.add(new Option(i));
+
+    // 🆕 Fecha actual por defecto en los paneles con empleado
+    ['ropa','calzado','utiles','implementos'].forEach(t=>{
+        const f = document.getElementById(t+'-fecha');
+        if(f) f.valueAsDate = new Date();
+    });
 }
 
 // Mostrar panel
 function showPanel(panel){
-    ['ropa','calzado','celulares','utiles','implementos'].forEach(p=>document.getElementById('panel-'+p).style.display='none');
+    ['ropa','calzado','celulares','utiles','implementos','buscarEmpleado'].forEach(p=>document.getElementById('panel-'+p).style.display='none');
     document.getElementById('panel-'+panel).style.display='block';
 }
 
@@ -555,6 +835,65 @@ function updateStockView(type){
     }
 }
 
+// ============================================================
+// 🆕 AUTOCOMPLETADO DE EMPLEADOS (por iniciales de nombre o apellido)
+// ============================================================
+function filtrarEmpleados(tipo){
+    const input = document.getElementById(tipo+'-empleado');
+    const lista = document.getElementById(tipo+'-empleado-lista');
+    const query = input.value.trim().toLowerCase();
+    lista.innerHTML = '';
+
+    if(query.length === 0){ lista.style.display='none'; return; }
+
+    const coincidencias = empleados.filter(e => e.nombre.toLowerCase().includes(query));
+    if(coincidencias.length === 0){ lista.style.display='none'; return; }
+
+    coincidencias.forEach(emp => {
+        const div = document.createElement('div');
+        div.className = 'empleado-item';
+        div.innerText = emp.nombre;
+        div.onclick = () => {
+            input.value = emp.nombre;
+            lista.style.display = 'none';
+        };
+        lista.appendChild(div);
+    });
+
+    lista.style.display = 'block';
+}
+
+// Cierra los desplegables de empleado si se hace clic fuera
+document.addEventListener('click', function(e){
+    document.querySelectorAll('.empleado-lista').forEach(lista=>{
+        const contenedor = lista.closest('.empleado-autocomplete');
+        if(contenedor && !contenedor.contains(e.target)){
+            lista.style.display = 'none';
+        }
+    });
+});
+
+function obtenerEmpleadoValidado(type){
+    const input = document.getElementById(type+'-empleado');
+    if(!input) return '';
+    const nombre = input.value.trim();
+    const existe = empleados.some(e => e.nombre === nombre);
+    if(!existe){
+        alert('Selecciona un empleado de la lista antes de continuar.');
+        return null;
+    }
+    return nombre;
+}
+
+function obtenerFechaSeleccionada(type){
+    const inputFecha = document.getElementById(type+'-fecha');
+    if(inputFecha && inputFecha.value){
+        const [y,m,d] = inputFecha.value.split('-');
+        return d+'/'+m+'/'+y;
+    }
+    return new Date().toLocaleDateString();
+}
+
 // 🔥 SISTEMA DE CONFIRMACIÓN
 let accionPendiente = null;
 
@@ -575,6 +914,11 @@ function ejecutarConfirmacion(respuesta){
 // Modificar stock
 function modifyStock(type,action){
 
+    // 🆕 Validamos empleado y fecha ANTES de pedir confirmación
+    const empleadoSel = obtenerEmpleadoValidado(type);
+    if(empleadoSel === null) return;
+    const fechaSel = obtenerFechaSeleccionada(type);
+
     let texto = action === 'add' 
         ? "¿Seguro que deseas AGREGAR este producto?" 
         : "¿Seguro que deseas RETIRAR este producto?";
@@ -593,7 +937,7 @@ function modifyStock(type,action){
         if(action==='remove' && qty>inventory.ropa[key]) { alert('No hay suficiente stock'); return; }
         inventory.ropa[key]+=(action==='add'?qty:-qty);
         updateStockView('ropa');
-        addHistory(new Date().toLocaleString(),producto,talla,estado,action==='add'?'Agregado':'Retirado',qty,obs);
+        addHistory(fechaSel,producto,talla,estado,action==='add'?'Agregado':'Retirado',qty,obs,empleadoSel);
     } else if(type==='calzado'){
         producto=currentProduct.calzado;
         talla=document.getElementById('calzado-talla').value;
@@ -606,7 +950,7 @@ function modifyStock(type,action){
         inventory.calzado[key]+=(action==='add'?qty:-qty);
         updateStockView('calzado');
         let textoPares = qty === 1 ? '1 par' : qty + ' pares';
-addHistory(new Date().toLocaleString(),producto,talla,estado,action==='add'?'Agregado':'Retirado',textoPares,obs);
+addHistory(fechaSel,producto,talla,estado,action==='add'?'Agregado':'Retirado',textoPares,obs,empleadoSel);
     } else if(type==='utiles'){
         producto=currentProduct.utiles;
         estado=document.getElementById('utiles-estado').value;
@@ -617,7 +961,7 @@ addHistory(new Date().toLocaleString(),producto,talla,estado,action==='add'?'Agr
         if(action==='remove' && qty>inventory.utiles[key]) { alert('No hay suficiente stock'); return; }
         inventory.utiles[key]+=(action==='add'?qty:-qty);
         updateStockView('utiles');
-        addHistory(new Date().toLocaleString(),producto,'N/A',estado,action==='add'?'Agregado':'Retirado',qty,obs);
+        addHistory(fechaSel,producto,'N/A',estado,action==='add'?'Agregado':'Retirado',qty,obs,empleadoSel);
     } else if(type==='implementos'){
         producto=currentProduct.implementos;
         estado=document.getElementById('implementos-estado').value;
@@ -628,7 +972,7 @@ addHistory(new Date().toLocaleString(),producto,talla,estado,action==='add'?'Agr
         if(action==='remove' && qty>inventory.implementos[key]) { alert('No hay suficiente stock'); return; }
         inventory.implementos[key]+=(action==='add'?qty:-qty);
         updateStockView('implementos');
-        addHistory(new Date().toLocaleString(),producto,'N/A',estado,action==='add'?'Agregado':'Retirado',qty,obs);
+        addHistory(fechaSel,producto,'N/A',estado,action==='add'?'Agregado':'Retirado',qty,obs,empleadoSel);
     }
 
     }); // 👈 ESTE CIERRA la confirmación
@@ -643,13 +987,14 @@ function updateCellNumber(){
     if(!numero) return alert('Ingrese un nuevo número');
     inventory.celular[producto]={number:numero,operator:operador};
     document.getElementById('celular-actual').value=numero;
-    addHistory(new Date().toLocaleString(),producto,'N/A','N/A','Actualizado',1,obs);
+    addHistory(new Date().toLocaleDateString(),producto,'N/A','N/A','Actualizado',1,obs);
     document.getElementById('celular-nuevo').value='';
     document.getElementById('celular-obs').value='';
   
-    fetch("https://script.google.com/macros/s/AKfycbz-6MWjzw9IULXxu-lslKq_I0NvfRBH2n-j-r9rCXnqz8Mg-c3pBkW6iIxQsq3ppGSw/exec", {
+    fetch("https://script.google.com/macros/s/AKfycbzFZbCXdkM0kAj2Q6o--ncfKXECRH9xIb-UQXTr-Hp5QrTOsj14UrcPIieh5scxUnBw/exec", {
     method: "POST",
     body: JSON.stringify({
+        fecha: new Date().toLocaleDateString(),
         producto: producto,
         talla: "N/A",
         estado: "N/A",
@@ -657,7 +1002,8 @@ function updateCellNumber(){
         cantidad: 1,
         obs: obs,
         numero: numero,
-        operador: operador
+        operador: operador,
+        empleado: ""
     })
 })
 .then(res => res.text())
@@ -667,7 +1013,11 @@ function updateCellNumber(){
 }
 
 // Agregar al historial
-function addHistory(fecha,prod,talla,estado,accion,cant,obs){
+function addHistory(fecha,prod,talla,estado,accion,cant,obs,empleado){
+
+    // 🆕 Guardamos en memoria para el buscador de empleado y el reporte
+    historialData.unshift({fecha:fecha,prod:prod,talla:talla,estado:estado,accion:accion,cant:cant,obs:obs,empleado:empleado||''});
+
     let tbody=document.getElementById('historial-body');
     let row=document.createElement('tr');
 
@@ -685,12 +1035,14 @@ function addHistory(fecha,prod,talla,estado,accion,cant,obs){
     <td>${accion}</td>
     <td>${cant}</td>
     <td>${obs}</td>
+    <td>${empleado||''}</td>
     `;
 
     tbody.prepend(row);
-    fetch("https://script.google.com/macros/s/AKfycbz-6MWjzw9IULXxu-lslKq_I0NvfRBH2n-j-r9rCXnqz8Mg-c3pBkW6iIxQsq3ppGSw/exec", {
+    fetch("https://script.google.com/macros/s/AKfycbzFZbCXdkM0kAj2Q6o--ncfKXECRH9xIb-UQXTr-Hp5QrTOsj14UrcPIieh5scxUnBw/exec", {
     method: "POST",
     body: JSON.stringify({
+        fecha: fecha,
         producto: prod,
         talla: talla,
         estado: estado,
@@ -698,7 +1050,8 @@ function addHistory(fecha,prod,talla,estado,accion,cant,obs){
         cantidad: cant,
         obs: obs,
         numero: "",
-        operador: ""
+        operador: "",
+        empleado: empleado||""
     })
 })
 .then(res => res.text())
@@ -706,7 +1059,11 @@ function addHistory(fecha,prod,talla,estado,accion,cant,obs){
 .catch(err => console.error("Error:", err));
 }
 
-function addHistoryVisual(fecha, prod, talla, estado, accion, cant, obs) {
+function addHistoryVisual(fecha, prod, talla, estado, accion, cant, obs, empleado) {
+
+    // 🆕 Guardamos también en memoria al cargar desde Sheets
+    historialData.unshift({fecha:fecha,prod:prod,talla:talla,estado:estado,accion:accion,cant:cant,obs:obs,empleado:empleado||''});
+
     let tbody = document.getElementById('historial-body');
     let row = document.createElement('tr');
 
@@ -724,6 +1081,7 @@ function addHistoryVisual(fecha, prod, talla, estado, accion, cant, obs) {
         <td>${accion}</td>
         <td>${cant}</td>
         <td>${obs}</td>
+        <td>${empleado||''}</td>
     `;
 
     tbody.prepend(row);
@@ -777,14 +1135,15 @@ function login(){
 }
 
 function cargarDatos(){
-    fetch("https://script.google.com/macros/s/AKfycbz-6MWjzw9IULXxu-lslKq_I0NvfRBH2n-j-r9rCXnqz8Mg-c3pBkW6iIxQsq3ppGSw/exec")
+    fetch("https://script.google.com/macros/s/AKfycbzFZbCXdkM0kAj2Q6o--ncfKXECRH9xIb-UQXTr-Hp5QrTOsj14UrcPIieh5scxUnBw/exec")
     .then(res => res.json())
     .then(data => {
         // Reiniciar inventario
         inventory = {ropa:{}, calzado:{}, celular:{}, utiles:{}, implementos:{}};
 
-        // Limpiar historial visual
+        // Limpiar historial visual y en memoria
         document.getElementById('historial-body').innerHTML = "";
+        historialData = [];
 
         // Recorrer filas del Google Sheet
         data.slice(1).forEach(row => {
@@ -796,6 +1155,7 @@ function cargarDatos(){
             let obs = row[6];
             let numero = row[7];
             let operador = row[8];
+            let empleado = row[9]; // 🆕 Columna J: Empleado (agrégala en tu Google Sheet / Apps Script)
 
             let tipo = detectarTipo(producto);
             if(!tipo) return; // Evita errores
@@ -823,7 +1183,7 @@ if(tipo === 'utiles' || tipo === 'implementos'){
             }
 
             // 🔹 Solo mostrar historial en tabla, NO enviar POST
-            addHistoryVisual(row[0], producto, talla, estado, accion, cantidad, obs);
+            addHistoryVisual(row[0], producto, talla, estado, accion, cantidad, obs, empleado);
         });
 
         console.log("✅ Inventario reconstruido:", inventory);
@@ -837,6 +1197,165 @@ function detectarTipo(producto){
     if(celularList.includes(producto)) return 'celular';
 
     return null; // 👈 evita errores
+}
+
+// ============================================================
+// 🆕 BUSCADOR DE HISTORIAL POR EMPLEADO
+// ============================================================
+function filtrarEmpleadoBusqueda(){
+    const input = document.getElementById('buscar-empleado-input');
+    const lista = document.getElementById('buscar-empleado-lista');
+    const query = input.value.trim().toLowerCase();
+    lista.innerHTML = '';
+    empleadoSeleccionadoBusqueda = null;
+    document.getElementById('buscar-empleado-resultado').style.display = 'none';
+
+    if(query.length === 0){ lista.style.display='none'; return; }
+
+    const coincidencias = empleados.filter(e => e.nombre.toLowerCase().includes(query));
+    if(coincidencias.length === 0){ lista.style.display='none'; return; }
+
+    coincidencias.forEach(emp => {
+        const div = document.createElement('div');
+        div.className = 'empleado-item';
+        div.innerText = emp.nombre;
+        div.onclick = () => {
+            input.value = emp.nombre;
+            lista.style.display = 'none';
+            empleadoSeleccionadoBusqueda = emp.nombre;
+            mostrarHistorialEmpleado(emp.nombre);
+        };
+        lista.appendChild(div);
+    });
+
+    lista.style.display = 'block';
+}
+
+function mostrarHistorialEmpleado(nombre){
+    const tbody = document.getElementById('buscar-empleado-historial-body');
+    tbody.innerHTML = '';
+
+    const registros = historialData.filter(r => r.empleado === nombre);
+
+    registros.forEach(r=>{
+        let row = document.createElement('tr');
+        if(r.accion==='Agregado') row.style.color='green';
+        else if(r.accion==='Retirado') row.style.color='red';
+        row.innerHTML = `<td>${r.fecha}</td><td>${r.prod}</td><td>${r.talla}</td><td>${r.estado}</td><td>${r.accion}</td><td>${r.cant}</td><td>${r.obs}</td>`;
+        tbody.appendChild(row);
+    });
+
+    document.getElementById('buscar-empleado-resultado').style.display = 'block';
+
+    if(registros.length === 0){
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;">Sin movimientos registrados para este empleado</td></tr>';
+    }
+}
+
+// ============================================================
+// 🆕 GENERAR FICHA/REPORTE DEL EMPLEADO (para exportar)
+// ============================================================
+function generarReporteHTML(nombre){
+    const emp = empleados.find(e => e.nombre === nombre);
+    if(!emp){ alert('Selecciona un empleado válido.'); return false; }
+
+    const registros = historialData.filter(r => r.empleado === nombre);
+
+    let itemsHTML = '';
+    if(registros.length === 0){
+        itemsHTML = '<p style="color:#ccc;">No hay movimientos registrados para este empleado.</p>';
+    } else {
+        registros.forEach(r=>{
+            let accionMostrar = r.accion === 'Agregado' ? 'Recibió' : (r.accion === 'Retirado' ? 'Devolvió' : r.accion);
+            itemsHTML += `
+            <div class="reporte-fecha">${r.fecha}</div>
+            <div class="reporte-item">
+                <ul>
+                    <li>• Producto: "${r.prod||''}"</li>
+                    <li>• Talla: "${r.talla||''}"</li>
+                    <li>• Estado: "${r.estado||''}"</li>
+                    <li>• Accion: "${accionMostrar}"</li>
+                    <li>• Cantidad: "${r.cant||''}"</li>
+                    <li>• Observacion: "${r.obs||''}"</li>
+                </ul>
+            </div>`;
+        });
+    }
+
+    const contenedor = document.getElementById('reporteHidden');
+    contenedor.innerHTML = `
+    <div class="reporte-page">
+        <div class="reporte-triangulo"></div>
+        <div class="reporte-izquierda">
+            <div class="reporte-foto-container">${emp.foto ? `<img src="${emp.foto}" crossorigin="anonymous">` : ''}</div>
+            <div class="reporte-nombre">${emp.nombre}</div>
+            <div class="reporte-datos-titulo">Datos</div>
+            <div class="reporte-dato">• DNI: ${emp.dni||''}</div>
+            <div class="reporte-dato">• Unidad: ${emp.unidad||''}</div>
+            <div class="reporte-dato">• Celular: ${emp.celular||''}</div>
+            <div class="reporte-dato">• Correo: ${emp.correo||''}</div>
+            <div class="reporte-logo-container">
+                ${logoEmpresa ? `<img src="${logoEmpresa}" crossorigin="anonymous">` : ''}
+            </div>
+        </div>
+        <div class="reporte-derecha">
+            <div class="reporte-historial-titulo">Historial</div>
+            ${itemsHTML}
+        </div>
+    </div>`;
+
+    return true;
+}
+
+// 🆕 Descargar ficha del empleado como IMAGEN (PNG, tamaño A4)
+async function descargarReporteImagen(){
+    const nombre = empleadoSeleccionadoBusqueda;
+    if(!nombre) return alert('Primero busca y selecciona un empleado.');
+    if(!generarReporteHTML(nombre)) return;
+
+    await new Promise(r=>setTimeout(r,250)); // esperar carga de imágenes
+
+    const pagina = document.querySelector('#reporteHidden .reporte-page');
+    const canvas = await html2canvas(pagina, {scale:2, useCORS:true});
+
+    const link = document.createElement('a');
+    link.download = `Historial_${nombre.replace(/\s+/g,'_')}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+
+// 🆕 Descargar ficha del empleado como PDF (A4)
+async function descargarReportePDF(){
+    const nombre = empleadoSeleccionadoBusqueda;
+    if(!nombre) return alert('Primero busca y selecciona un empleado.');
+    if(!generarReporteHTML(nombre)) return;
+
+    await new Promise(r=>setTimeout(r,250)); // esperar carga de imágenes
+
+    const pagina = document.querySelector('#reporteHidden .reporte-page');
+    const canvas = await html2canvas(pagina, {scale:2, useCORS:true});
+    const imgData = canvas.toDataURL('image/png');
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p','mm','a4');
+    const pageWidth = 210, pageHeight = 297;
+    const imgWidth = pageWidth;
+    const imgHeight = canvas.height * imgWidth / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData,'PNG',0,position,imgWidth,imgHeight);
+    heightLeft -= pageHeight;
+
+    while(heightLeft > 0){
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData,'PNG',0,position,imgWidth,imgHeight);
+        heightLeft -= pageHeight;
+    }
+
+    pdf.save(`Historial_${nombre.replace(/\s+/g,'_')}.pdf`);
 }
 
 </script>
