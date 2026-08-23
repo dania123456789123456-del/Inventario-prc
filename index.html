@@ -1613,20 +1613,14 @@ function mostrarHistorialEmpleado(nombre, productoFiltro, fechaFiltro){
 }
 
 // ============================================================
-// 🆕 GENERAR FICHA/REPORTE DEL EMPLEADO (para exportar)
-// Respeta los filtros activos (producto y/o fecha):
-// - Sin filtro de producto (Todos los productos): agrupa el historial
-//   por FECHA, mostrando todos los artículos entregados/devueltos ese
-//   día juntos.
-// - Con filtro de producto puntual: igual que antes, un registro por
-//   fecha para ese producto.
-// - Si además hay un filtro de fecha exacta, solo se incluye ese día.
-// En ambos casos incluye el total en su poder, aquí SÍ con el detalle
-// de talla y estado (solo la ficha descargable muestra ese detalle).
+// 🆕 Arma los datos base de la ficha del empleado (empleado, registros
+// filtrados, resumen "Total en su poder" y los registros agrupados por
+// fecha). Lo comparten tanto la ficha de una sola hoja (imagen) como la
+// versión paginada (PDF).
 // ============================================================
-function generarReporteHTML(nombre, productoFiltro, fechaFiltro){
+function obtenerDatosReporteEmpleado(nombre, productoFiltro, fechaFiltro){
     const emp = empleados.find(e => e.nombre === nombre);
-    if(!emp){ alert('Selecciona un empleado válido.'); return false; }
+    if(!emp) return null;
 
     productoFiltro = productoFiltro || '';
     fechaFiltro = fechaFiltro || '';
@@ -1639,7 +1633,7 @@ function generarReporteHTML(nombre, productoFiltro, fechaFiltro){
         registros = registros.filter(r => r.fecha === fechaFiltro);
     }
 
-    // 🆕 Resumen "Total en su poder" (con talla y estado, solo para la ficha)
+    // Resumen "Total en su poder" (con talla y estado, solo para la ficha)
     const totales = calcularTotalesEmpleadoDetallado(nombre, productoFiltro);
     let resumenHTML = '';
     if(totales.length > 0){
@@ -1653,35 +1647,71 @@ function generarReporteHTML(nombre, productoFiltro, fechaFiltro){
         resumenHTML += '</div>';
     }
 
-    // 🆕 Agrupar los movimientos por fecha (una sola vez el encabezado de fecha,
+    // Agrupar los movimientos por fecha (una sola vez el encabezado de fecha,
     // y debajo todos los artículos entregados/devueltos ese día)
+    const grupos = {};
+    const ordenFechas = [];
+    registros.forEach(r=>{
+        if(!grupos[r.fecha]){ grupos[r.fecha] = []; ordenFechas.push(r.fecha); }
+        grupos[r.fecha].push(r);
+    });
+    const gruposPorFecha = ordenFechas.map(fecha => ({fecha, items: grupos[fecha]}));
+
+    return {emp, registros, resumenHTML, gruposPorFecha};
+}
+
+// 🆕 HTML de un solo registro del historial (usado en la ficha y en el PDF paginado)
+function construirItemHistorialHTML(r){
+    const accionMostrar = mapearAccionEmpleado(r.accion);
+    return `
+    <div class="reporte-item">
+        <ul>
+            <li>• Producto: "${r.prod||''}"</li>
+            <li>• Talla: "${r.talla||''}"</li>
+            <li>• Estado: "${r.estado||''}"</li>
+            <li>• Accion: "${accionMostrar}"</li>
+            <li>• Cantidad: "${r.cant||''}"</li>
+            <li>• Observacion: "${r.obs||''}"</li>
+        </ul>
+    </div>`;
+}
+
+// 🆕 HTML de la columna izquierda (foto, nombre, datos, total en su poder, logo).
+// Se repite igual en cada hoja del PDF cuando el historial ocupa varias páginas.
+function construirIzquierdaReporteHTML(emp, resumenHTML){
+    return `
+    <div class="reporte-izquierda">
+        <div class="reporte-foto-container">${emp.foto ? `<img src="${emp.foto}" crossorigin="anonymous">` : ''}</div>
+        <div class="reporte-nombre">${emp.nombre}</div>
+        <div class="reporte-datos-titulo">Datos</div>
+        <div class="reporte-dato">• DNI: ${emp.dni||''}</div>
+        <div class="reporte-dato">• Unidad: ${emp.unidad||''}</div>
+        <div class="reporte-dato">• Celular: ${emp.celular||''}</div>
+        <div class="reporte-dato">• Correo: ${emp.correo||''}</div>
+        ${resumenHTML}
+        <div class="reporte-logo-container">
+            ${logoEmpresa ? `<img src="${logoEmpresa}" crossorigin="anonymous">` : ''}
+        </div>
+    </div>`;
+}
+
+// ============================================================
+// 🆕 GENERAR FICHA/REPORTE DEL EMPLEADO EN UNA SOLA HOJA (para la IMAGEN)
+// Aquí no hace falta paginar: la imagen simplemente puede ser más alta
+// que una hoja A4 y se descarga completa igual.
+// ============================================================
+function generarReporteHTML(nombre, productoFiltro, fechaFiltro){
+    const datos = obtenerDatosReporteEmpleado(nombre, productoFiltro, fechaFiltro);
+    if(!datos){ alert('Selecciona un empleado válido.'); return false; }
+    const {emp, registros, resumenHTML, gruposPorFecha} = datos;
+
     let itemsHTML = '';
     if(registros.length === 0){
         itemsHTML = '<p style="color:#ccc;">No hay movimientos registrados para este empleado.</p>';
     } else {
-        const grupos = {};
-        const ordenFechas = [];
-        registros.forEach(r=>{
-            if(!grupos[r.fecha]){ grupos[r.fecha] = []; ordenFechas.push(r.fecha); }
-            grupos[r.fecha].push(r);
-        });
-
-        ordenFechas.forEach(fecha=>{
-            itemsHTML += `<div class="reporte-fecha">${fecha}</div>`;
-            grupos[fecha].forEach(r=>{
-                const accionMostrar = mapearAccionEmpleado(r.accion);
-                itemsHTML += `
-                <div class="reporte-item">
-                    <ul>
-                        <li>• Producto: "${r.prod||''}"</li>
-                        <li>• Talla: "${r.talla||''}"</li>
-                        <li>• Estado: "${r.estado||''}"</li>
-                        <li>• Accion: "${accionMostrar}"</li>
-                        <li>• Cantidad: "${r.cant||''}"</li>
-                        <li>• Observacion: "${r.obs||''}"</li>
-                    </ul>
-                </div>`;
-            });
+        gruposPorFecha.forEach(g=>{
+            itemsHTML += `<div class="reporte-fecha">${g.fecha}</div>`;
+            g.items.forEach(r=>{ itemsHTML += construirItemHistorialHTML(r); });
         });
     }
 
@@ -1689,19 +1719,7 @@ function generarReporteHTML(nombre, productoFiltro, fechaFiltro){
     contenedor.innerHTML = `
     <div class="reporte-page">
         <div class="reporte-triangulo"></div>
-        <div class="reporte-izquierda">
-            <div class="reporte-foto-container">${emp.foto ? `<img src="${emp.foto}" crossorigin="anonymous">` : ''}</div>
-            <div class="reporte-nombre">${emp.nombre}</div>
-            <div class="reporte-datos-titulo">Datos</div>
-            <div class="reporte-dato">• DNI: ${emp.dni||''}</div>
-            <div class="reporte-dato">• Unidad: ${emp.unidad||''}</div>
-            <div class="reporte-dato">• Celular: ${emp.celular||''}</div>
-            <div class="reporte-dato">• Correo: ${emp.correo||''}</div>
-            ${resumenHTML}
-            <div class="reporte-logo-container">
-                ${logoEmpresa ? `<img src="${logoEmpresa}" crossorigin="anonymous">` : ''}
-            </div>
-        </div>
+        ${construirIzquierdaReporteHTML(emp, resumenHTML)}
         <div class="reporte-derecha">
             <div class="reporte-historial-titulo">Historial</div>
             ${itemsHTML}
@@ -1711,13 +1729,98 @@ function generarReporteHTML(nombre, productoFiltro, fechaFiltro){
     return true;
 }
 
-// 🆕 Nombre de archivo amigable según los filtros activos (producto y/o fecha)
+// ============================================================
+// 🆕 PAGINACIÓN REAL PARA EL PDF
+// En vez de cortar la imagen renderizada a la mitad de un registro (lo que
+// entrecortaba el texto entre una hoja y otra), medimos la altura real que
+// ocupa cada fecha y cada registro, y armamos las hojas completas
+// respetando esos bloques. Cada hoja adicional repite la columna izquierda
+// (foto, nombre, datos, total en su poder y logo) y solo continúa con el
+// historial que no entró en la hoja anterior.
+// ============================================================
+async function calcularPaginasHistorial(gruposPorFecha, alturaDisponiblePx){
+    // Contenedor de medición oculto, con el mismo ancho real que tiene la
+    // columna de historial dentro de la ficha (794 - 280 de la columna
+    // izquierda - 56 de padding lateral = 458px).
+    const medidor = document.createElement('div');
+    medidor.style.position = 'absolute';
+    medidor.style.left = '-9999px';
+    medidor.style.top = '0';
+    medidor.style.width = '458px';
+    medidor.style.fontFamily = "'Poppins', sans-serif";
+    document.body.appendChild(medidor);
+
+    // "Unidades" indivisibles: un encabezado de fecha, o un registro completo.
+    const unidades = [];
+    gruposPorFecha.forEach(g=>{
+        unidades.push({tipo:'fecha', html:`<div class="reporte-fecha">${g.fecha}</div>`});
+        g.items.forEach(r=>{
+            unidades.push({tipo:'item', html: construirItemHistorialHTML(r)});
+        });
+    });
+
+    unidades.forEach(u=>{
+        medidor.innerHTML = u.html;
+        u.alto = medidor.firstElementChild.getBoundingClientRect().height;
+    });
+
+    document.body.removeChild(medidor);
+
+    // Agrupamos las unidades en páginas sin sobrepasar la altura disponible,
+    // y sin dejar un encabezado de fecha solo, al final de una hoja.
+    const paginas = [];
+    let paginaActual = [];
+    let alturaActual = 0;
+
+    for(let i=0; i<unidades.length; i++){
+        const u = unidades[i];
+        let alturaNecesaria = u.alto;
+        if(u.tipo === 'fecha' && unidades[i+1] && unidades[i+1].tipo === 'item'){
+            alturaNecesaria += unidades[i+1].alto;
+        }
+
+        if(paginaActual.length > 0 && (alturaActual + alturaNecesaria) > alturaDisponiblePx){
+            paginas.push(paginaActual);
+            paginaActual = [];
+            alturaActual = 0;
+        }
+
+        paginaActual.push(u);
+        alturaActual += u.alto;
+    }
+
+    if(paginaActual.length > 0) paginas.push(paginaActual);
+
+    return paginas;
+}
+
+// 🆕 Mide cuánto ocupa el título "Historial" para saber cuánto espacio
+// real queda disponible para los registros en cada hoja A4.
+function medirAlturaTituloHistorial(){
+    const medidor = document.createElement('div');
+    medidor.style.position = 'absolute';
+    medidor.style.left = '-9999px';
+    medidor.style.top = '0';
+    medidor.style.width = '458px';
+    medidor.style.fontFamily = "'Poppins', sans-serif";
+    medidor.innerHTML = '<div class="reporte-historial-titulo">Historial</div>';
+    document.body.appendChild(medidor);
+    const alto = medidor.firstElementChild.getBoundingClientRect().height;
+    document.body.removeChild(medidor);
+    return alto;
+}
+
+// 🆕 Nombre de archivo amigable y descriptivo del filtro que se está usando
 function sufijoArchivoFiltro(){
     let partes = [];
     if(filtroProductoEmpleado) partes.push(filtroProductoEmpleado.replace(/\s+/g,'_'));
     if(filtroFechaEmpleado) partes.push(filtroFechaEmpleado.replace(/\//g,'-'));
-    if(partes.length === 0) return 'Completo';
+    if(partes.length === 0) return 'Historial_Completo';
     return partes.join('_');
+}
+
+function nombreArchivoReporte(nombre, extension){
+    return `Ficha_${nombre.replace(/\s+/g,'_')}_${sufijoArchivoFiltro()}.${extension}`;
 }
 
 // 🆕 Descargar ficha del empleado como IMAGEN (PNG, tamaño A4)
@@ -1733,53 +1836,111 @@ async function descargarReporteImagen(){
 
     // 🆕 data:URI (no blob:) para que funcione también dentro de un WebView
     const link = document.createElement('a');
-    link.download = `Historial_${nombre.replace(/\s+/g,'_')}_${sufijoArchivoFiltro()}.png`;
+    link.download = nombreArchivoReporte(nombre, 'png');
     link.href = canvas.toDataURL('image/png');
     link.click();
 }
 
-// 🆕 Descargar ficha del empleado como PDF (A4)
+// ============================================================
+// 🆕 Descargar ficha del empleado como PDF (A4), con paginación real.
+// Si el historial no cabe en una sola hoja, en vez de cortar la imagen a
+// la mitad de un registro, se calculan hojas completas: cada hoja
+// adicional repite la columna izquierda (foto, nombre, datos, total en
+// su poder y logo) y continúa solo con los registros que faltan.
+// ============================================================
 async function descargarReportePDF(){
     const nombre = empleadoSeleccionadoBusqueda;
     if(!nombre) return alert('Primero busca y selecciona un empleado.');
-    if(!generarReporteHTML(nombre, filtroProductoEmpleado, filtroFechaEmpleado)) return;
 
-    await new Promise(r=>setTimeout(r,250)); // esperar carga de imágenes
-
-    const pagina = document.querySelector('#reporteHidden .reporte-page');
-    const canvas = await html2canvas(pagina, {scale:2, useCORS:true});
-    const imgData = canvas.toDataURL('image/png');
+    const datos = obtenerDatosReporteEmpleado(nombre, filtroProductoEmpleado, filtroFechaEmpleado);
+    if(!datos) return alert('Selecciona un empleado válido.');
+    const {emp, registros, resumenHTML, gruposPorFecha} = datos;
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p','mm','a4');
-    const pageWidth = 210, pageHeight = 297;
-    const imgWidth = pageWidth;
-    const imgHeight = canvas.height * imgWidth / canvas.width;
+    const pageWidthMm = 210, pageHeightMm = 297;
+    const anchoPaginaPx = 794; // ancho A4 a 96dpi, igual al de .reporte-page
 
-    let heightLeft = imgHeight;
-    let position = 0;
+    const contenedor = document.getElementById('reporteHidden');
 
-    pdf.addImage(imgData,'PNG',0,position,imgWidth,imgHeight);
-    heightLeft -= pageHeight;
-
-    // 🆕 Margen de tolerancia (3mm): evita que quede una hoja extra casi en
-    // blanco por errores de redondeo cuando el historial es corto y el
-    // contenido apenas roza el borde de una hoja A4. Si de verdad sobra
-    // contenido (historial largo), sí se seguirán agregando las páginas
-    // necesarias.
-    while(heightLeft > 3){
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData,'PNG',0,position,imgWidth,imgHeight);
-        heightLeft -= pageHeight;
+    // Sin movimientos: una sola hoja con el mensaje, igual que antes.
+    if(registros.length === 0){
+        contenedor.innerHTML = `
+        <div class="reporte-page">
+            <div class="reporte-triangulo"></div>
+            ${construirIzquierdaReporteHTML(emp, resumenHTML)}
+            <div class="reporte-derecha">
+                <div class="reporte-historial-titulo">Historial</div>
+                <p style="color:#ccc;">No hay movimientos registrados para este empleado.</p>
+            </div>
+        </div>`;
+        await new Promise(r=>setTimeout(r,250));
+        const pagina = document.querySelector('#reporteHidden .reporte-page');
+        const canvas = await html2canvas(pagina, {scale:2, useCORS:true});
+        const imgHeight = canvas.height * pageWidthMm / canvas.width;
+        pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,pageWidthMm,imgHeight);
+        descargarPDFComoDataUri(pdf, nombreArchivoReporte(nombre,'pdf'));
+        return;
     }
 
-    const nombreArchivo = `Historial_${nombre.replace(/\s+/g,'_')}_${sufijoArchivoFiltro()}.pdf`;
+    // 🆕 Calculamos cuánto espacio real hay disponible para el historial en
+    // cada hoja (alto de página menos el padding de .reporte-derecha menos
+    // el alto del título "Historial"), y con eso paginamos sin cortar
+    // ningún registro a la mitad.
+    const alturaTitulo = medirAlturaTituloHistorial();
+    const alturaDisponiblePx = 1123 - (35*2) - alturaTitulo;
+    const paginas = await calcularPaginasHistorial(gruposPorFecha, alturaDisponiblePx);
 
-    // 🆕 Algunos WebView (Android) bloquean las descargas con blob: URI,
-    // que es lo que usa pdf.save() por dentro. Generamos el PDF como
-    // data:URI (igual que la imagen) para que la descarga funcione tanto
-    // en Chrome como dentro de un WebView.
+    for(let i=0; i<paginas.length; i++){
+        const itemsHTML = paginas[i].map(u => u.html).join('');
+
+        contenedor.innerHTML = `
+        <div class="reporte-page">
+            <div class="reporte-triangulo"></div>
+            ${construirIzquierdaReporteHTML(emp, resumenHTML)}
+            <div class="reporte-derecha">
+                <div class="reporte-historial-titulo">Historial${paginas.length > 1 ? ' (' + (i+1) + '/' + paginas.length + ')' : ''}</div>
+                ${itemsHTML}
+            </div>
+        </div>`;
+
+        // Solo hace falta esperar la carga de imágenes en la primera hoja;
+        // en las siguientes, el navegador ya las tiene en caché.
+        await new Promise(r=>setTimeout(r, i===0 ? 250 : 60));
+
+        const pagina = document.querySelector('#reporteHidden .reporte-page');
+        const canvas = await html2canvas(pagina, {scale:2, useCORS:true});
+        const imgData = canvas.toDataURL('image/png');
+        const imgHeight = canvas.height * pageWidthMm / canvas.width;
+
+        if(i > 0) pdf.addPage();
+        pdf.addImage(imgData,'PNG',0,0,pageWidthMm,imgHeight);
+
+        // 🆕 Red de seguridad: si por alguna razón una hoja igual quedó más
+        // alta que el A4 (ej. una observación muy larga que no se estimó
+        // bien), se sigue partiendo esa hoja en vez de perder información.
+        let heightLeft = imgHeight - pageHeightMm;
+        let position = 0;
+        while(heightLeft > 3){
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData,'PNG',0,position,pageWidthMm,imgHeight);
+            heightLeft -= pageHeightMm;
+        }
+    }
+
+    descargarPDFComoDataUri(pdf, nombreArchivoReporte(nombre,'pdf'));
+}
+
+// 🆕 Algunos WebView (Android) bloquean las descargas con blob: URI, que es
+// lo que usa pdf.save() por dentro. Generamos el PDF como data:URI (igual
+// que la imagen) para que la descarga funcione tanto en Chrome como dentro
+// de un WebView. El nombre sugerido (nombreArchivo) queda embebido en el
+// propio PDF; la mayoría de navegadores lo respeta al descargar, aunque
+// algunos WebView personalizados pueden reemplazarlo por uno genérico
+// ("descarga_...") según cómo esa app maneje las descargas — eso ya
+// depende del contenedor nativo y no de este HTML.
+function descargarPDFComoDataUri(pdf, nombreArchivo){
     try {
         const pdfDataUri = pdf.output('datauristring', {filename: nombreArchivo});
         const link = document.createElement('a');
