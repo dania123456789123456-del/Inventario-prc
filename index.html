@@ -351,6 +351,28 @@ tr:hover td {
     background: #ffe4ec;
 }
 
+/* 🆕 Dropdown personalizado "Filtrar por producto" (mismo estilo que empleado) */
+.filtro-select-wrapper {
+    position: relative;
+}
+
+.filtro-select-wrapper::after {
+    content: '▾';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #ff6a88;
+    pointer-events: none;
+    font-size: 0.9rem;
+}
+
+#buscar-producto-filtro-display {
+    cursor: pointer;
+    padding-right: 30px;
+    background: #fafafa;
+}
+
 /* ====================================================== */
 /* ===========  NUEVO: REPORTE / FICHA EMPLEADO  ========= */
 /* ====================================================== */
@@ -495,6 +517,42 @@ tr:hover td {
     margin-bottom: 7px;
     font-size: 0.88rem;
     color: #ddd;
+}
+
+/* ====================================================== */
+/* ======  NUEVO: RESUMEN "TOTAL EN SU PODER" (ficha)  === */
+/* ====================================================== */
+.reporte-resumen-titulo {
+    font-weight: 800;
+    font-size: 0.78rem;
+    color: #7a4b3a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-top: 2px solid #eee;
+    padding-top: 14px;
+    margin-top: 18px;
+    margin-bottom: 10px;
+}
+
+.reporte-resumen-lista {
+    margin-bottom: 10px;
+}
+
+.reporte-resumen-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+    color: #555;
+    padding: 5px 0;
+    border-bottom: 1px dashed #eee;
+    gap: 8px;
+}
+
+.reporte-resumen-cant {
+    font-weight: 800;
+    color: #ff4f81;
+    white-space: nowrap;
 }
 
 </style>
@@ -674,7 +732,19 @@ tr:hover td {
             </div>
         </div>
 
+        <!-- 🆕 Filtro por prenda/producto específico del empleado seleccionado -->
+        <div class="input-group" id="buscar-producto-filtro-grupo" style="display:none;">
+            <label>Filtrar por producto</label>
+            <div class="empleado-autocomplete filtro-select-wrapper">
+                <input type="text" id="buscar-producto-filtro-display" value="Todos los productos" readonly onclick="toggleFiltroProductoLista()" autocomplete="off">
+                <div id="buscar-producto-filtro-lista" class="empleado-lista"></div>
+            </div>
+        </div>
+
         <div id="buscar-empleado-resultado" style="display:none;">
+            <!-- 🆕 Total en su poder (según el filtro activo) -->
+            <div id="buscar-empleado-totales" class="stock-container" style="display:block; width:100%; margin-bottom:15px;"></div>
+
             <div class="historial-container">
                 <table>
                     <thead>
@@ -764,6 +834,8 @@ const logoEmpresa = "https://i.postimg.cc/hPNHGPQw/Jorge-Gonzales-20260822-02190
 // 🆕 Guardamos todo el historial en memoria para poder buscar por empleado
 let historialData = [];
 let empleadoSeleccionadoBusqueda = null;
+// 🆕 Producto (clave prod|talla|estado) por el que se está filtrando en la sección "Buscar Empleado"
+let filtroProductoEmpleado = '';
 
 // Inicialización
 function init(){
@@ -816,7 +888,17 @@ function resetCamposPanel(tipo){
         if(resultado) resultado.style.display = 'none';
         const tbody = document.getElementById('buscar-empleado-historial-body');
         if(tbody) tbody.innerHTML = '';
+        // 🆕 Reiniciar filtro de producto del empleado
+        const filtroGrupo = document.getElementById('buscar-producto-filtro-grupo');
+        if(filtroGrupo) filtroGrupo.style.display = 'none';
+        const filtroLista = document.getElementById('buscar-producto-filtro-lista');
+        if(filtroLista){ filtroLista.innerHTML = ''; filtroLista.style.display = 'none'; }
+        const filtroDisplay = document.getElementById('buscar-producto-filtro-display');
+        if(filtroDisplay) filtroDisplay.value = 'Todos los productos';
+        const totalesDiv = document.getElementById('buscar-empleado-totales');
+        if(totalesDiv) totalesDiv.innerHTML = '';
         empleadoSeleccionadoBusqueda = null;
+        filtroProductoEmpleado = '';
         return;
     }
 
@@ -1295,7 +1377,12 @@ function filtrarEmpleadoBusqueda(){
     const query = input.value.trim().toLowerCase();
     lista.innerHTML = '';
     empleadoSeleccionadoBusqueda = null;
+    filtroProductoEmpleado = '';
     document.getElementById('buscar-empleado-resultado').style.display = 'none';
+
+    // 🆕 Ocultar el filtro de producto mientras no haya empleado seleccionado
+    const filtroGrupo = document.getElementById('buscar-producto-filtro-grupo');
+    if(filtroGrupo) filtroGrupo.style.display = 'none';
 
     if(query.length === 0){ lista.style.display='none'; return; }
 
@@ -1310,7 +1397,9 @@ function filtrarEmpleadoBusqueda(){
             input.value = emp.nombre;
             lista.style.display = 'none';
             empleadoSeleccionadoBusqueda = emp.nombre;
-            mostrarHistorialEmpleado(emp.nombre);
+            filtroProductoEmpleado = '';
+            poblarFiltroProductosEmpleado(emp.nombre);
+            mostrarHistorialEmpleado(emp.nombre, filtroProductoEmpleado);
         };
         lista.appendChild(div);
     });
@@ -1318,17 +1407,138 @@ function filtrarEmpleadoBusqueda(){
     lista.style.display = 'block';
 }
 
-function mostrarHistorialEmpleado(nombre){
+// 🆕 Llena el dropdown personalizado "Filtrar por producto" solo con los
+// NOMBRES de producto que ESE empleado ha recibido alguna vez (sin talla
+// ni estado; ese detalle solo se muestra en la ficha descargable).
+function poblarFiltroProductosEmpleado(nombre){
+    const grupo = document.getElementById('buscar-producto-filtro-grupo');
+    const lista = document.getElementById('buscar-producto-filtro-lista');
+    const display = document.getElementById('buscar-producto-filtro-display');
+    if(!lista) return;
+
+    lista.innerHTML = '';
+
+    const productos = [...new Set(
+        historialData
+            .filter(r => r.empleado === nombre && (r.accion === 'Agregado' || r.accion === 'Retirado'))
+            .map(r => r.prod)
+    )];
+
+    const opcionTodos = document.createElement('div');
+    opcionTodos.className = 'empleado-item';
+    opcionTodos.innerText = 'Todos los productos';
+    opcionTodos.onclick = () => seleccionarFiltroProducto('', 'Todos los productos');
+    lista.appendChild(opcionTodos);
+
+    productos.forEach(prod => {
+        const div = document.createElement('div');
+        div.className = 'empleado-item';
+        div.innerText = prod;
+        div.onclick = () => seleccionarFiltroProducto(prod, prod);
+        lista.appendChild(div);
+    });
+
+    if(display) display.value = 'Todos los productos';
+    if(grupo) grupo.style.display = productos.length ? 'block' : 'none';
+}
+
+// 🆕 Abre/cierra el dropdown de "Filtrar por producto"
+function toggleFiltroProductoLista(){
+    const lista = document.getElementById('buscar-producto-filtro-lista');
+    if(!lista) return;
+    document.querySelectorAll('.empleado-lista').forEach(l => { if(l !== lista) l.style.display = 'none'; });
+    lista.style.display = (lista.style.display === 'block') ? 'none' : 'block';
+}
+
+// 🆕 Se dispara al elegir un producto (o "Todos los productos") del dropdown
+function seleccionarFiltroProducto(valor, textoMostrar){
+    filtroProductoEmpleado = valor;
+    const display = document.getElementById('buscar-producto-filtro-display');
+    if(display) display.value = textoMostrar;
+    const lista = document.getElementById('buscar-producto-filtro-lista');
+    if(lista) lista.style.display = 'none';
+    mostrarHistorialEmpleado(empleadoSeleccionadoBusqueda, filtroProductoEmpleado);
+}
+
+// 🆕 Traduce la acción de almacén a la acción vista desde el empleado:
+// "Retirado" (sale del almacén) = el empleado lo RECIBIÓ.
+// "Agregado" (vuelve al almacén) = el empleado lo DEVOLVIÓ.
+function mapearAccionEmpleado(accion){
+    if(accion === 'Retirado') return 'Recibió';
+    if(accion === 'Agregado') return 'Devolvió';
+    return accion;
+}
+
+// 🆕 Total en su poder AGRUPADO SOLO POR PRODUCTO (sin talla/estado).
+// Se usa para el bloque en pantalla "Total en su poder".
+function calcularTotalesEmpleadoPorProducto(nombre, productoFiltro){
+    const totales = {};
+    historialData
+        .filter(r => r.empleado === nombre && (r.accion === 'Agregado' || r.accion === 'Retirado'))
+        .forEach(r => {
+            if(productoFiltro && r.prod !== productoFiltro) return;
+            if(!(r.prod in totales)) totales[r.prod] = 0;
+            const cantidad = parseInt(r.cant) || 0;
+            totales[r.prod] += (r.accion === 'Retirado' ? cantidad : -cantidad);
+        });
+    return Object.entries(totales).map(([prod, total]) => ({prod, total}));
+}
+
+// 🆕 Total en su poder DETALLADO por producto|talla|estado.
+// Se usa solo en la ficha descargable (PDF / Imagen).
+function calcularTotalesEmpleadoDetallado(nombre, productoFiltro){
+    const combos = {};
+    historialData
+        .filter(r => r.empleado === nombre && (r.accion === 'Agregado' || r.accion === 'Retirado'))
+        .forEach(r => {
+            if(productoFiltro && r.prod !== productoFiltro) return;
+            const key = r.prod + '|' + r.talla + '|' + r.estado;
+            if(!combos[key]) combos[key] = {prod:r.prod, talla:r.talla, estado:r.estado, total:0};
+            const cantidad = parseInt(r.cant) || 0;
+            combos[key].total += (r.accion === 'Retirado' ? cantidad : -cantidad);
+        });
+    return Object.values(combos);
+}
+
+// 🆕 Pinta el bloque "Total en su poder" en la vista (no en el PDF/Imagen)
+// Solo muestra el nombre del producto, sin talla ni estado.
+function mostrarTotalesEmpleado(nombre, productoFiltro){
+    const cont = document.getElementById('buscar-empleado-totales');
+    if(!cont) return;
+
+    const totales = calcularTotalesEmpleadoPorProducto(nombre, productoFiltro);
+    if(totales.length === 0){ cont.innerHTML = ''; return; }
+
+    let html = '<div style="font-size:0.75rem;color:#666;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;margin-bottom:8px;">📦 Total en su poder</div>';
+    totales.forEach(t=>{
+        html += `<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed #ffccd5;">
+            <span style="color:#555;">${t.prod}</span>
+            <span style="font-weight:800;color:${t.total>0?'#ff4f81':'#999'};">${t.total}</span>
+        </div>`;
+    });
+
+    cont.innerHTML = html;
+}
+
+function mostrarHistorialEmpleado(nombre, productoFiltro){
+    productoFiltro = productoFiltro || '';
     const tbody = document.getElementById('buscar-empleado-historial-body');
     tbody.innerHTML = '';
 
-    const registros = historialData.filter(r => r.empleado === nombre);
+    let registros = historialData.filter(r => r.empleado === nombre);
+    if(productoFiltro){
+        registros = registros.filter(r => r.prod === productoFiltro);
+    }
+
+    // 🆕 Total en su poder según el filtro activo (solo por producto)
+    mostrarTotalesEmpleado(nombre, productoFiltro);
 
     registros.forEach(r=>{
         let row = document.createElement('tr');
-        if(r.accion==='Agregado') row.style.color='green';
-        else if(r.accion==='Retirado') row.style.color='red';
-        row.innerHTML = `<td>${r.fecha}</td><td>${r.prod}</td><td>${r.talla}</td><td>${r.estado}</td><td>${r.accion}</td><td>${r.cant}</td><td>${r.obs}</td>`;
+        const accionMostrar = mapearAccionEmpleado(r.accion);
+        if(accionMostrar==='Recibió') row.style.color='green';
+        else if(accionMostrar==='Devolvió') row.style.color='#c98a00';
+        row.innerHTML = `<td>${r.fecha}</td><td>${r.prod}</td><td>${r.talla}</td><td>${r.estado}</td><td>${accionMostrar}</td><td>${r.cant}</td><td>${r.obs}</td>`;
         tbody.appendChild(row);
     });
 
@@ -1341,31 +1551,68 @@ function mostrarHistorialEmpleado(nombre){
 
 // ============================================================
 // 🆕 GENERAR FICHA/REPORTE DEL EMPLEADO (para exportar)
+// Respeta el filtro de producto activo:
+// - Sin filtro (Todos los productos): agrupa el historial por FECHA,
+//   mostrando todos los artículos entregados/devueltos ese día juntos.
+// - Con filtro (un producto puntual): igual que antes, un registro
+//   por fecha para ese producto.
+// En ambos casos incluye el total en su poder, aquí SÍ con el detalle
+// de talla y estado (solo la ficha descargable muestra ese detalle).
 // ============================================================
-function generarReporteHTML(nombre){
+function generarReporteHTML(nombre, productoFiltro){
     const emp = empleados.find(e => e.nombre === nombre);
     if(!emp){ alert('Selecciona un empleado válido.'); return false; }
 
-    const registros = historialData.filter(r => r.empleado === nombre);
+    productoFiltro = productoFiltro || '';
 
+    let registros = historialData.filter(r => r.empleado === nombre);
+    if(productoFiltro){
+        registros = registros.filter(r => r.prod === productoFiltro);
+    }
+
+    // 🆕 Resumen "Total en su poder" (con talla y estado, solo para la ficha)
+    const totales = calcularTotalesEmpleadoDetallado(nombre, productoFiltro);
+    let resumenHTML = '';
+    if(totales.length > 0){
+        resumenHTML = '<div class="reporte-resumen-titulo">📦 Total en su poder</div><div class="reporte-resumen-lista">';
+        totales.forEach(t=>{
+            const detalle = (t.talla && t.talla !== 'N/A')
+                ? `${t.prod} (${t.talla} / ${t.estado})`
+                : `${t.prod} (${t.estado})`;
+            resumenHTML += `<div class="reporte-resumen-item"><span>${detalle}</span><span class="reporte-resumen-cant">${t.total}</span></div>`;
+        });
+        resumenHTML += '</div>';
+    }
+
+    // 🆕 Agrupar los movimientos por fecha (una sola vez el encabezado de fecha,
+    // y debajo todos los artículos entregados/devueltos ese día)
     let itemsHTML = '';
     if(registros.length === 0){
         itemsHTML = '<p style="color:#ccc;">No hay movimientos registrados para este empleado.</p>';
     } else {
+        const grupos = {};
+        const ordenFechas = [];
         registros.forEach(r=>{
-            let accionMostrar = r.accion === 'Agregado' ? 'Recibió' : (r.accion === 'Retirado' ? 'Devolvió' : r.accion);
-            itemsHTML += `
-            <div class="reporte-fecha">${r.fecha}</div>
-            <div class="reporte-item">
-                <ul>
-                    <li>• Producto: "${r.prod||''}"</li>
-                    <li>• Talla: "${r.talla||''}"</li>
-                    <li>• Estado: "${r.estado||''}"</li>
-                    <li>• Accion: "${accionMostrar}"</li>
-                    <li>• Cantidad: "${r.cant||''}"</li>
-                    <li>• Observacion: "${r.obs||''}"</li>
-                </ul>
-            </div>`;
+            if(!grupos[r.fecha]){ grupos[r.fecha] = []; ordenFechas.push(r.fecha); }
+            grupos[r.fecha].push(r);
+        });
+
+        ordenFechas.forEach(fecha=>{
+            itemsHTML += `<div class="reporte-fecha">${fecha}</div>`;
+            grupos[fecha].forEach(r=>{
+                const accionMostrar = mapearAccionEmpleado(r.accion);
+                itemsHTML += `
+                <div class="reporte-item">
+                    <ul>
+                        <li>• Producto: "${r.prod||''}"</li>
+                        <li>• Talla: "${r.talla||''}"</li>
+                        <li>• Estado: "${r.estado||''}"</li>
+                        <li>• Accion: "${accionMostrar}"</li>
+                        <li>• Cantidad: "${r.cant||''}"</li>
+                        <li>• Observacion: "${r.obs||''}"</li>
+                    </ul>
+                </div>`;
+            });
         });
     }
 
@@ -1381,6 +1628,7 @@ function generarReporteHTML(nombre){
             <div class="reporte-dato">• Unidad: ${emp.unidad||''}</div>
             <div class="reporte-dato">• Celular: ${emp.celular||''}</div>
             <div class="reporte-dato">• Correo: ${emp.correo||''}</div>
+            ${resumenHTML}
             <div class="reporte-logo-container">
                 ${logoEmpresa ? `<img src="${logoEmpresa}" crossorigin="anonymous">` : ''}
             </div>
@@ -1394,11 +1642,17 @@ function generarReporteHTML(nombre){
     return true;
 }
 
+// 🆕 Nombre de archivo amigable según si hay filtro de producto activo
+function sufijoArchivoFiltro(){
+    if(!filtroProductoEmpleado) return 'Completo';
+    return filtroProductoEmpleado.replace(/\s+/g,'_');
+}
+
 // 🆕 Descargar ficha del empleado como IMAGEN (PNG, tamaño A4)
 async function descargarReporteImagen(){
     const nombre = empleadoSeleccionadoBusqueda;
     if(!nombre) return alert('Primero busca y selecciona un empleado.');
-    if(!generarReporteHTML(nombre)) return;
+    if(!generarReporteHTML(nombre, filtroProductoEmpleado)) return;
 
     await new Promise(r=>setTimeout(r,250)); // esperar carga de imágenes
 
@@ -1406,7 +1660,7 @@ async function descargarReporteImagen(){
     const canvas = await html2canvas(pagina, {scale:2, useCORS:true});
 
     const link = document.createElement('a');
-    link.download = `Historial_${nombre.replace(/\s+/g,'_')}.png`;
+    link.download = `Historial_${nombre.replace(/\s+/g,'_')}_${sufijoArchivoFiltro()}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
 }
@@ -1415,7 +1669,7 @@ async function descargarReporteImagen(){
 async function descargarReportePDF(){
     const nombre = empleadoSeleccionadoBusqueda;
     if(!nombre) return alert('Primero busca y selecciona un empleado.');
-    if(!generarReporteHTML(nombre)) return;
+    if(!generarReporteHTML(nombre, filtroProductoEmpleado)) return;
 
     await new Promise(r=>setTimeout(r,250)); // esperar carga de imágenes
 
@@ -1442,7 +1696,7 @@ async function descargarReportePDF(){
         heightLeft -= pageHeight;
     }
 
-    pdf.save(`Historial_${nombre.replace(/\s+/g,'_')}.pdf`);
+    pdf.save(`Historial_${nombre.replace(/\s+/g,'_')}_${sufijoArchivoFiltro()}.pdf`);
 }
 
 </script>
