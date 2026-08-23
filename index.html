@@ -1759,9 +1759,17 @@ async function calcularPaginasHistorial(gruposPorFecha, alturaDisponiblePx){
         });
     });
 
+    // 🆕 Medimos cada unidad precedida de un <div> "fantasma" (oculto pero
+    // presente en el DOM). Esto es importante para las fechas: la regla CSS
+    // ".reporte-fecha:first-of-type { margin-top:0 }" solo debe aplicar a
+    // la fecha que aparece justo después del título "Historial" (que
+    // también es un <div> y por lo tanto ya ocupa ese primer lugar). Si
+    // midiéramos la fecha sola, el navegador SÍ la trataría como la primera
+    // de su tipo y le daría margen 0, subestimando su altura real (~30px de
+    // menos por cada fecha), que era la causa de la hoja extra en blanco.
     unidades.forEach(u=>{
-        medidor.innerHTML = u.html;
-        u.alto = medidor.firstElementChild.getBoundingClientRect().height;
+        medidor.innerHTML = '<div style="height:0;overflow:hidden;"></div>' + u.html;
+        u.alto = medidor.lastElementChild.getBoundingClientRect().height;
     });
 
     document.body.removeChild(medidor);
