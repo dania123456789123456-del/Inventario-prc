@@ -1731,70 +1731,96 @@ function generarReporteHTML(nombre, productoFiltro, fechaFiltro){
 
 // ============================================================
 // 🆕 PAGINACIÓN REAL PARA EL PDF
-// En vez de cortar la imagen renderizada a la mitad de un registro (lo que
-// entrecortaba el texto entre una hoja y otra), medimos la altura real que
-// ocupa cada fecha y cada registro, y armamos las hojas completas
-// respetando esos bloques. Cada hoja adicional repite la columna izquierda
-// (foto, nombre, datos, total en su poder y logo) y solo continúa con el
-// historial que no entró en la hoja anterior.
+// En vez de sumar "a mano" la altura de cada bloque (lo que no contaba
+// bien los márgenes ni el colapso de márgenes entre el título y el primer
+// registro, y seguía generando una hoja extra), dejamos que el propio
+// navegador arme TODO el historial de corrido en un contenedor oculto y
+// leemos la posición real (offsetTop) de cada elemento. Así el "hueco"
+// entre unidades sale exactamente igual que en el render final.
 // ============================================================
 async function calcularPaginasHistorial(gruposPorFecha, alturaDisponiblePx){
-    // Contenedor de medición oculto, con el mismo ancho real que tiene la
-    // columna de historial dentro de la ficha (794 - 280 de la columna
-    // izquierda - 56 de padding lateral = 458px).
     const medidor = document.createElement('div');
     medidor.style.position = 'absolute';
     medidor.style.left = '-9999px';
     medidor.style.top = '0';
-    medidor.style.width = '458px';
+    medidor.style.width = '458px'; // igual al ancho real de .reporte-derecha sin su padding
     medidor.style.fontFamily = "'Poppins', sans-serif";
     document.body.appendChild(medidor);
 
-    // "Unidades" indivisibles: un encabezado de fecha, o un registro completo.
-    const unidades = [];
+    // El título "Historial" se repite en cada hoja. El espacio que deja
+    // antes del primer contenido no es el mismo si ese contenido es una
+    // fecha (colapsa el margen del título con el de la fecha) o un
+    // registro suelto (los registros no tienen margen propio). Medimos
+    // ambos casos una sola vez.
+    medidor.innerHTML = '<div class="reporte-historial-titulo">Historial</div><div class="reporte-fecha" data-med="x">X</div>';
+    const gapTituloFecha = medidor.querySelector('[data-med="x"]').offsetTop;
+
+    medidor.innerHTML = '<div class="reporte-historial-titulo">Historial</div>'
+        + construirItemHistorialHTML({}).replace('<div class="reporte-item">', '<div class="reporte-item" data-med="x">');
+    const gapTituloItem = medidor.querySelector('[data-med="x"]').offsetTop;
+
+    // Armamos TODO el historial de corrido (título + todas las fechas y
+    // registros, sin paginar) para leer la posición real de cada unidad.
+    let htmlCompleto = '<div class="reporte-historial-titulo">Historial</div>';
+    const meta = [];
     gruposPorFecha.forEach(g=>{
-        unidades.push({tipo:'fecha', html:`<div class="reporte-fecha">${g.fecha}</div>`});
+        htmlCompleto += `<div class="reporte-fecha" data-med="u">${g.fecha}</div>`;
+        meta.push({tipo:'fecha', fecha:g.fecha});
         g.items.forEach(r=>{
-            unidades.push({tipo:'item', html: construirItemHistorialHTML(r)});
+            htmlCompleto += construirItemHistorialHTML(r).replace('<div class="reporte-item">', '<div class="reporte-item" data-med="u">');
+            meta.push({tipo:'item', registro:r});
         });
     });
 
-    // 🆕 Medimos cada unidad precedida de un <div> "fantasma" (oculto pero
-    // presente en el DOM). Esto es importante para las fechas: la regla CSS
-    // ".reporte-fecha:first-of-type { margin-top:0 }" solo debe aplicar a
-    // la fecha que aparece justo después del título "Historial" (que
-    // también es un <div> y por lo tanto ya ocupa ese primer lugar). Si
-    // midiéramos la fecha sola, el navegador SÍ la trataría como la primera
-    // de su tipo y le daría margen 0, subestimando su altura real (~30px de
-    // menos por cada fecha), que era la causa de la hoja extra en blanco.
-    unidades.forEach(u=>{
-        medidor.innerHTML = '<div style="height:0;overflow:hidden;"></div>' + u.html;
-        u.alto = medidor.lastElementChild.getBoundingClientRect().height;
-    });
+    medidor.innerHTML = htmlCompleto;
+    const nodos = Array.from(medidor.querySelectorAll('[data-med="u"]'));
+    const posiciones = nodos.map(n => n.offsetTop);
+    const finTotal = medidor.scrollHeight;
 
     document.body.removeChild(medidor);
 
-    // Agrupamos las unidades en páginas sin sobrepasar la altura disponible,
-    // y sin dejar un encabezado de fecha solo, al final de una hoja.
+    // Altura real que ocupa cada unidad HASTA que empieza la siguiente
+    // (esto ya incluye el margen/hueco real entre elementos).
+    const unidades = meta.map((u, i) => {
+        const inicio = posiciones[i];
+        const fin = (i+1 < posiciones.length) ? posiciones[i+1] : finTotal;
+        return {tipo:u.tipo, fecha:u.fecha, registro:u.registro, alto: fin - inicio};
+    });
+
+    const gapInicioPagina = (tipo) => (tipo === 'fecha' ? gapTituloFecha : gapTituloItem);
+
+    // Agrupamos las unidades en páginas sin sobrepasar la altura disponible.
+    // Cada vez que una unidad abre una página nueva, le sumamos el hueco
+    // real que deja el título repetido en esa hoja. Además, un encabezado
+    // de fecha nunca queda solo al final de una hoja: si le sigue un
+    // registro, entran juntos o pasan juntos a la siguiente.
     const paginas = [];
     let paginaActual = [];
     let alturaActual = 0;
 
     for(let i=0; i<unidades.length; i++){
         const u = unidades[i];
+
+        if(paginaActual.length === 0){
+            alturaActual = gapInicioPagina(u.tipo) + u.alto;
+            paginaActual.push(u);
+            continue;
+        }
+
         let alturaNecesaria = u.alto;
         if(u.tipo === 'fecha' && unidades[i+1] && unidades[i+1].tipo === 'item'){
             alturaNecesaria += unidades[i+1].alto;
         }
 
-        if(paginaActual.length > 0 && (alturaActual + alturaNecesaria) > alturaDisponiblePx){
+        if((alturaActual + alturaNecesaria) > alturaDisponiblePx){
             paginas.push(paginaActual);
-            paginaActual = [];
-            alturaActual = 0;
+            paginaActual = [u];
+            alturaActual = gapInicioPagina(u.tipo) + u.alto;
+            continue;
         }
 
-        paginaActual.push(u);
         alturaActual += u.alto;
+        paginaActual.push(u);
     }
 
     if(paginaActual.length > 0) paginas.push(paginaActual);
@@ -1802,21 +1828,15 @@ async function calcularPaginasHistorial(gruposPorFecha, alturaDisponiblePx){
     return paginas;
 }
 
-// 🆕 Mide cuánto ocupa el título "Historial" para saber cuánto espacio
-// real queda disponible para los registros en cada hoja A4.
-function medirAlturaTituloHistorial(){
-    const medidor = document.createElement('div');
-    medidor.style.position = 'absolute';
-    medidor.style.left = '-9999px';
-    medidor.style.top = '0';
-    medidor.style.width = '458px';
-    medidor.style.fontFamily = "'Poppins', sans-serif";
-    medidor.innerHTML = '<div class="reporte-historial-titulo">Historial</div>';
-    document.body.appendChild(medidor);
-    const alto = medidor.firstElementChild.getBoundingClientRect().height;
-    document.body.removeChild(medidor);
-    return alto;
+// 🆕 HTML de una unidad ya paginada (fecha o registro) para pintarla en la
+// hoja final del PDF.
+function construirUnidadHTML(u){
+    return u.tipo === 'fecha'
+        ? `<div class="reporte-fecha">${u.fecha}</div>`
+        : construirItemHistorialHTML(u.registro);
 }
+
+
 
 // 🆕 Nombre de archivo amigable y descriptivo del filtro que se está usando
 function sufijoArchivoFiltro(){
@@ -1891,16 +1911,15 @@ async function descargarReportePDF(){
         return;
     }
 
-    // 🆕 Calculamos cuánto espacio real hay disponible para el historial en
-    // cada hoja (alto de página menos el padding de .reporte-derecha menos
-    // el alto del título "Historial"), y con eso paginamos sin cortar
-    // ningún registro a la mitad.
-    const alturaTitulo = medirAlturaTituloHistorial();
-    const alturaDisponiblePx = 1123 - (35*2) - alturaTitulo;
+    // 🆕 Espacio real disponible para el historial en cada hoja: alto de
+    // página A4 menos el padding vertical de .reporte-derecha (35px arriba
+    // y 35px abajo). El espacio que ocupa el título "Historial" ya queda
+    // contemplado dentro de la medición de calcularPaginasHistorial.
+    const alturaDisponiblePx = 1123 - (35*2);
     const paginas = await calcularPaginasHistorial(gruposPorFecha, alturaDisponiblePx);
 
     for(let i=0; i<paginas.length; i++){
-        const itemsHTML = paginas[i].map(u => u.html).join('');
+        const itemsHTML = paginas[i].map(u => construirUnidadHTML(u)).join('');
 
         contenedor.innerHTML = `
         <div class="reporte-page">
