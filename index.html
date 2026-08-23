@@ -373,6 +373,16 @@ tr:hover td {
     background: #fafafa;
 }
 
+/* 🆕 Más aire entre los bloques del panel "Buscar Empleado" */
+#panel-buscarEmpleado .input-group {
+    margin-bottom: 6px;
+}
+
+#panel-buscarEmpleado .input-group label {
+    display: block;
+    margin-bottom: 6px;
+}
+
 /* ====================================================== */
 /* ===========  NUEVO: REPORTE / FICHA EMPLEADO  ========= */
 /* ====================================================== */
@@ -733,7 +743,7 @@ tr:hover td {
         </div>
 
         <!-- 🆕 Filtro por prenda/producto específico del empleado seleccionado -->
-        <div class="input-group" id="buscar-producto-filtro-grupo" style="display:none;">
+        <div class="input-group" id="buscar-producto-filtro-grupo" style="display:none; margin-top:22px;">
             <label>Filtrar por producto</label>
             <div class="empleado-autocomplete filtro-select-wrapper">
                 <input type="text" id="buscar-producto-filtro-display" value="Todos los productos" readonly onclick="toggleFiltroProductoLista()" autocomplete="off">
@@ -741,7 +751,16 @@ tr:hover td {
             </div>
         </div>
 
-        <div id="buscar-empleado-resultado" style="display:none;">
+        <!-- 🆕 Filtro opcional por fecha exacta (ej. el primer día que se le entregó algo) -->
+        <div class="input-group" id="buscar-fecha-filtro-grupo" style="display:none; margin-top:18px;">
+            <label>Filtrar por fecha (opcional)</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <input type="date" id="buscar-fecha-filtro" onchange="onChangeFiltroFechaEmpleado()" style="flex:1;">
+                <button type="button" class="btn btn-remove" style="margin:0; padding:9px 14px; white-space:nowrap;" onclick="limpiarFiltroFechaEmpleado()">✕ Quitar</button>
+            </div>
+        </div>
+
+        <div id="buscar-empleado-resultado" style="display:none; margin-top:24px;">
             <!-- 🆕 Total en su poder (según el filtro activo) -->
             <div id="buscar-empleado-totales" class="stock-container" style="display:block; width:100%; margin-bottom:15px;"></div>
 
@@ -836,6 +855,8 @@ let historialData = [];
 let empleadoSeleccionadoBusqueda = null;
 // 🆕 Producto (clave prod|talla|estado) por el que se está filtrando en la sección "Buscar Empleado"
 let filtroProductoEmpleado = '';
+// 🆕 Filtro opcional por fecha exacta (formato dd/mm/yyyy, igual que se guarda en historialData)
+let filtroFechaEmpleado = '';
 
 // Inicialización
 function init(){
@@ -895,10 +916,16 @@ function resetCamposPanel(tipo){
         if(filtroLista){ filtroLista.innerHTML = ''; filtroLista.style.display = 'none'; }
         const filtroDisplay = document.getElementById('buscar-producto-filtro-display');
         if(filtroDisplay) filtroDisplay.value = 'Todos los productos';
+        // 🆕 Reiniciar filtro de fecha del empleado
+        const fechaGrupo = document.getElementById('buscar-fecha-filtro-grupo');
+        if(fechaGrupo) fechaGrupo.style.display = 'none';
+        const fechaInput = document.getElementById('buscar-fecha-filtro');
+        if(fechaInput) fechaInput.value = '';
         const totalesDiv = document.getElementById('buscar-empleado-totales');
         if(totalesDiv) totalesDiv.innerHTML = '';
         empleadoSeleccionadoBusqueda = null;
         filtroProductoEmpleado = '';
+        filtroFechaEmpleado = '';
         return;
     }
 
@@ -1378,11 +1405,16 @@ function filtrarEmpleadoBusqueda(){
     lista.innerHTML = '';
     empleadoSeleccionadoBusqueda = null;
     filtroProductoEmpleado = '';
+    filtroFechaEmpleado = '';
     document.getElementById('buscar-empleado-resultado').style.display = 'none';
 
-    // 🆕 Ocultar el filtro de producto mientras no haya empleado seleccionado
+    // 🆕 Ocultar los filtros de producto y fecha mientras no haya empleado seleccionado
     const filtroGrupo = document.getElementById('buscar-producto-filtro-grupo');
     if(filtroGrupo) filtroGrupo.style.display = 'none';
+    const fechaGrupo = document.getElementById('buscar-fecha-filtro-grupo');
+    if(fechaGrupo) fechaGrupo.style.display = 'none';
+    const fechaInput = document.getElementById('buscar-fecha-filtro');
+    if(fechaInput) fechaInput.value = '';
 
     if(query.length === 0){ lista.style.display='none'; return; }
 
@@ -1398,8 +1430,14 @@ function filtrarEmpleadoBusqueda(){
             lista.style.display = 'none';
             empleadoSeleccionadoBusqueda = emp.nombre;
             filtroProductoEmpleado = '';
+            filtroFechaEmpleado = '';
             poblarFiltroProductosEmpleado(emp.nombre);
-            mostrarHistorialEmpleado(emp.nombre, filtroProductoEmpleado);
+            // 🆕 Mostrar el filtro opcional de fecha una vez elegido el empleado
+            const fechaGrupo2 = document.getElementById('buscar-fecha-filtro-grupo');
+            if(fechaGrupo2) fechaGrupo2.style.display = 'block';
+            const fechaInput2 = document.getElementById('buscar-fecha-filtro');
+            if(fechaInput2) fechaInput2.value = '';
+            mostrarHistorialEmpleado(emp.nombre, filtroProductoEmpleado, filtroFechaEmpleado);
         };
         lista.appendChild(div);
     });
@@ -1457,7 +1495,27 @@ function seleccionarFiltroProducto(valor, textoMostrar){
     if(display) display.value = textoMostrar;
     const lista = document.getElementById('buscar-producto-filtro-lista');
     if(lista) lista.style.display = 'none';
-    mostrarHistorialEmpleado(empleadoSeleccionadoBusqueda, filtroProductoEmpleado);
+    mostrarHistorialEmpleado(empleadoSeleccionadoBusqueda, filtroProductoEmpleado, filtroFechaEmpleado);
+}
+
+// 🆕 Filtro opcional por fecha exacta (ej. el primer día de trabajo del empleado)
+function onChangeFiltroFechaEmpleado(){
+    const input = document.getElementById('buscar-fecha-filtro');
+    if(input && input.value){
+        const [y,m,d] = input.value.split('-');
+        filtroFechaEmpleado = d+'/'+m+'/'+y;
+    } else {
+        filtroFechaEmpleado = '';
+    }
+    mostrarHistorialEmpleado(empleadoSeleccionadoBusqueda, filtroProductoEmpleado, filtroFechaEmpleado);
+}
+
+// 🆕 Quita el filtro de fecha (es opcional, no siempre se usa)
+function limpiarFiltroFechaEmpleado(){
+    filtroFechaEmpleado = '';
+    const input = document.getElementById('buscar-fecha-filtro');
+    if(input) input.value = '';
+    mostrarHistorialEmpleado(empleadoSeleccionadoBusqueda, filtroProductoEmpleado, filtroFechaEmpleado);
 }
 
 // 🆕 Traduce la acción de almacén a la acción vista desde el empleado:
@@ -1520,8 +1578,9 @@ function mostrarTotalesEmpleado(nombre, productoFiltro){
     cont.innerHTML = html;
 }
 
-function mostrarHistorialEmpleado(nombre, productoFiltro){
+function mostrarHistorialEmpleado(nombre, productoFiltro, fechaFiltro){
     productoFiltro = productoFiltro || '';
+    fechaFiltro = fechaFiltro || '';
     const tbody = document.getElementById('buscar-empleado-historial-body');
     tbody.innerHTML = '';
 
@@ -1529,8 +1588,12 @@ function mostrarHistorialEmpleado(nombre, productoFiltro){
     if(productoFiltro){
         registros = registros.filter(r => r.prod === productoFiltro);
     }
+    if(fechaFiltro){
+        registros = registros.filter(r => r.fecha === fechaFiltro);
+    }
 
-    // 🆕 Total en su poder según el filtro activo (solo por producto)
+    // 🆕 Total en su poder según el filtro activo (solo por producto; no cambia con la fecha,
+    // siempre refleja lo que el empleado tiene AHORA en su poder)
     mostrarTotalesEmpleado(nombre, productoFiltro);
 
     registros.forEach(r=>{
@@ -1551,23 +1614,29 @@ function mostrarHistorialEmpleado(nombre, productoFiltro){
 
 // ============================================================
 // 🆕 GENERAR FICHA/REPORTE DEL EMPLEADO (para exportar)
-// Respeta el filtro de producto activo:
-// - Sin filtro (Todos los productos): agrupa el historial por FECHA,
-//   mostrando todos los artículos entregados/devueltos ese día juntos.
-// - Con filtro (un producto puntual): igual que antes, un registro
-//   por fecha para ese producto.
+// Respeta los filtros activos (producto y/o fecha):
+// - Sin filtro de producto (Todos los productos): agrupa el historial
+//   por FECHA, mostrando todos los artículos entregados/devueltos ese
+//   día juntos.
+// - Con filtro de producto puntual: igual que antes, un registro por
+//   fecha para ese producto.
+// - Si además hay un filtro de fecha exacta, solo se incluye ese día.
 // En ambos casos incluye el total en su poder, aquí SÍ con el detalle
 // de talla y estado (solo la ficha descargable muestra ese detalle).
 // ============================================================
-function generarReporteHTML(nombre, productoFiltro){
+function generarReporteHTML(nombre, productoFiltro, fechaFiltro){
     const emp = empleados.find(e => e.nombre === nombre);
     if(!emp){ alert('Selecciona un empleado válido.'); return false; }
 
     productoFiltro = productoFiltro || '';
+    fechaFiltro = fechaFiltro || '';
 
     let registros = historialData.filter(r => r.empleado === nombre);
     if(productoFiltro){
         registros = registros.filter(r => r.prod === productoFiltro);
+    }
+    if(fechaFiltro){
+        registros = registros.filter(r => r.fecha === fechaFiltro);
     }
 
     // 🆕 Resumen "Total en su poder" (con talla y estado, solo para la ficha)
@@ -1642,23 +1711,27 @@ function generarReporteHTML(nombre, productoFiltro){
     return true;
 }
 
-// 🆕 Nombre de archivo amigable según si hay filtro de producto activo
+// 🆕 Nombre de archivo amigable según los filtros activos (producto y/o fecha)
 function sufijoArchivoFiltro(){
-    if(!filtroProductoEmpleado) return 'Completo';
-    return filtroProductoEmpleado.replace(/\s+/g,'_');
+    let partes = [];
+    if(filtroProductoEmpleado) partes.push(filtroProductoEmpleado.replace(/\s+/g,'_'));
+    if(filtroFechaEmpleado) partes.push(filtroFechaEmpleado.replace(/\//g,'-'));
+    if(partes.length === 0) return 'Completo';
+    return partes.join('_');
 }
 
 // 🆕 Descargar ficha del empleado como IMAGEN (PNG, tamaño A4)
 async function descargarReporteImagen(){
     const nombre = empleadoSeleccionadoBusqueda;
     if(!nombre) return alert('Primero busca y selecciona un empleado.');
-    if(!generarReporteHTML(nombre, filtroProductoEmpleado)) return;
+    if(!generarReporteHTML(nombre, filtroProductoEmpleado, filtroFechaEmpleado)) return;
 
     await new Promise(r=>setTimeout(r,250)); // esperar carga de imágenes
 
     const pagina = document.querySelector('#reporteHidden .reporte-page');
     const canvas = await html2canvas(pagina, {scale:2, useCORS:true});
 
+    // 🆕 data:URI (no blob:) para que funcione también dentro de un WebView
     const link = document.createElement('a');
     link.download = `Historial_${nombre.replace(/\s+/g,'_')}_${sufijoArchivoFiltro()}.png`;
     link.href = canvas.toDataURL('image/png');
@@ -1669,7 +1742,7 @@ async function descargarReporteImagen(){
 async function descargarReportePDF(){
     const nombre = empleadoSeleccionadoBusqueda;
     if(!nombre) return alert('Primero busca y selecciona un empleado.');
-    if(!generarReporteHTML(nombre, filtroProductoEmpleado)) return;
+    if(!generarReporteHTML(nombre, filtroProductoEmpleado, filtroFechaEmpleado)) return;
 
     await new Promise(r=>setTimeout(r,250)); // esperar carga de imágenes
 
@@ -1689,14 +1762,36 @@ async function descargarReportePDF(){
     pdf.addImage(imgData,'PNG',0,position,imgWidth,imgHeight);
     heightLeft -= pageHeight;
 
-    while(heightLeft > 0){
+    // 🆕 Margen de tolerancia (3mm): evita que quede una hoja extra casi en
+    // blanco por errores de redondeo cuando el historial es corto y el
+    // contenido apenas roza el borde de una hoja A4. Si de verdad sobra
+    // contenido (historial largo), sí se seguirán agregando las páginas
+    // necesarias.
+    while(heightLeft > 3){
         position = heightLeft - imgHeight;
         pdf.addPage();
         pdf.addImage(imgData,'PNG',0,position,imgWidth,imgHeight);
         heightLeft -= pageHeight;
     }
 
-    pdf.save(`Historial_${nombre.replace(/\s+/g,'_')}_${sufijoArchivoFiltro()}.pdf`);
+    const nombreArchivo = `Historial_${nombre.replace(/\s+/g,'_')}_${sufijoArchivoFiltro()}.pdf`;
+
+    // 🆕 Algunos WebView (Android) bloquean las descargas con blob: URI,
+    // que es lo que usa pdf.save() por dentro. Generamos el PDF como
+    // data:URI (igual que la imagen) para que la descarga funcione tanto
+    // en Chrome como dentro de un WebView.
+    try {
+        const pdfDataUri = pdf.output('datauristring', {filename: nombreArchivo});
+        const link = document.createElement('a');
+        link.href = pdfDataUri;
+        link.download = nombreArchivo;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch(err){
+        console.error('Error generando data:URI del PDF, se usa el método estándar:', err);
+        pdf.save(nombreArchivo);
+    }
 }
 
 </script>
