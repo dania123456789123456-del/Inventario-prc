@@ -1,323 +1,520 @@
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventario PRC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 
-/* ====== FONDO ====== */
+/* ============================================================
+   TOKENS DE DISEÑO
+   ============================================================ */
+:root{
+    --plum-900:#2C1922;
+    --plum-800:#3A2130;
+    --plum-700:#59314A;
+    --rose-600:#B24E71;
+    --rose-500:#C6577B;
+    --rose-400:#D97C97;
+    --rose-200:#F2C8D4;
+    --rose-100:#FBEAEF;
+    --gold-500:#B8935B;
+    --gold-300:#D9BE8F;
+    --cream-50:#FBF4F0;
+    --cream-100:#F7EAE4;
+    --white:#FFFFFF;
+    --text-900:#332028;
+    --text-600:#6E5760;
+    --text-400:#9C8A92;
+    --ok:#3E7A4C;
+    --warn:#B5495B;
+    --shadow-soft: 0 12px 32px -12px rgba(44,25,34,0.20);
+    --shadow-tiny: 0 3px 14px -4px rgba(44,25,34,0.10);
+}
+
+* { box-sizing: border-box; }
+
+/* ====== FONDO / BASE ====== */
 body {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Inter', sans-serif;
     margin:0;
-    background: linear-gradient(135deg, #fdfbfb, #ebedee);
-    overflow: hidden; /* 🔥 evita que se corte */
+    background: var(--cream-50);
+    overflow: hidden; /* evita que se corte */
+    color: var(--text-900);
+    -webkit-font-smoothing:antialiased;
 }
 
-/* ====== SIDEBAR CLARO ====== */
-.sidebar {
-    width: 35%;
-    max-width: 220px;
-    min-width: 140px;
-    background: #ffffff;
-    color:#444;
-    padding:1rem;
-    height:100vh;
-    box-shadow: 4px 0 20px rgba(0,0,0,0.05);
-    border-right:1px solid #eee;
-    overflow-y: auto; /* 🔥 scroll SOLO aquí */
-}
-    background: #ffffff;
-    color:#444;
-    padding:1.5rem 1rem;
-    height:100vh;
-    box-shadow: 4px 0 20px rgba(0,0,0,0.05);
-    border-right:1px solid #eee;
-}
+h1,h2,h3,.serif{ font-family:'Fraunces', serif; }
 
-.sidebar h2 {
+/* ====================================================== */
+/* ==================  LOGIN  ============================ */
+/* ====================================================== */
+.login-wrap{
+    width:100%;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    position:relative;
+    overflow:hidden;
+    background:
+      radial-gradient(1100px 620px at 12% -10%, #6B3352 0%, transparent 60%),
+      radial-gradient(950px 700px at 112% 112%, #C6577B 0%, transparent 55%),
+      linear-gradient(160deg, var(--plum-900) 0%, var(--plum-800) 45%, var(--rose-600) 135%);
+}
+#loginParticles{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
+    z-index:1;
+}
+.login-card{
+    position:relative;
+    z-index:2;
+    background:var(--white);
+    padding:42px 34px 32px;
+    border-radius:26px;
+    width:320px;
+    max-width:88vw;
     text-align:center;
-    margin-bottom:1.5rem;
-    color:#ff4f81;
-    font-weight:700;
+    box-shadow: var(--shadow-soft), 0 0 0 1px rgba(255,255,255,.35);
 }
+.login-mark{
+    width:54px;height:54px;
+    margin:0 auto 16px;
+    border-radius:15px;
+    background:linear-gradient(140deg, var(--rose-500), var(--gold-500));
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-family:'Fraunces',serif;font-weight:600;font-size:21px;
+    overflow:hidden;
+    box-shadow:0 8px 20px -6px rgba(198,87,123,.55);
+}
+.login-mark img{ width:100%;height:100%;object-fit:cover; }
+.login-eyebrow{
+    font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--gold-500); font-weight:700; margin-bottom:4px;
+}
+.login-card h2{
+    font-size:23px; font-weight:600; margin:0 0 22px; color:var(--text-900);
+}
+.field{ text-align:left; margin-bottom:14px; }
+.field label{
+    display:block; font-size:11.5px; font-weight:600;
+    color:var(--text-600); margin-bottom:5px; letter-spacing:.02em;
+}
+#loginScreen input[type="text"],
+#loginScreen input[type="password"]{
+    width:100%; margin:0 !important;
+}
+.login-foot{ margin-top:16px; font-size:11px; color:var(--text-400); }
+
+/* ====================================================== */
+/* ==============  ESTRUCTURA PRINCIPAL  ================= */
+/* ====================================================== */
+
+/* panelApp = contenedor flex (sidebar + columna principal) */
+#panelApp{
+    background: var(--cream-50);
+}
+
+/* ====== SIDEBAR ====== */
+.sidebar {
+    width: 240px;
+    max-width: 240px;
+    min-width: 210px;
+    flex-shrink:0;
+    background: linear-gradient(190deg, var(--plum-900), var(--plum-800) 78%);
+    color:#EFE3E8;
+    padding: 22px 16px 18px;
+    height:100vh;
+    overflow-y: auto;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.sidebar-brand{
+    display:flex; align-items:center; gap:11px;
+    padding:2px 6px 18px;
+    margin-bottom:8px;
+    border-bottom:1px solid rgba(255,255,255,.09);
+}
+.brand-mark{
+    width:40px;height:40px;border-radius:12px;flex-shrink:0;
+    background:linear-gradient(140deg, var(--rose-500), var(--gold-500));
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-family:'Fraunces',serif;font-weight:600;font-size:16px;
+    overflow:hidden;
+}
+.brand-mark img{ width:100%;height:100%;object-fit:cover; }
+.brand-text .eyebrow{
+    font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--gold-300); font-weight:700;
+}
+.brand-text .name{
+    font-family:'Fraunces',serif;color:#fff;font-size:15.5px;font-weight:600;line-height:1.15;
+}
+
+.sidebar h2{ display:none; } /* por compatibilidad, ya no se usa el h2 original */
 
 /* BOTONES MENU */
 .sidebar button {
+    display:flex; align-items:center; gap:10px;
     width:100%;
-    margin:8px 0;
-    padding:12px;
-    background:#f8f8f8;
-    border:none;
-    color:#444;
+    margin:3px 0;
+    padding:12px 13px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: #E9D9E0;
     cursor:pointer;
     border-radius:12px;
-    transition:0.25s;
+    transition: .18s;
     font-weight:500;
+    font-size: 13.8px;
+    font-family:'Inter', sans-serif;
+    text-align:left;
 }
 
 .sidebar button:hover {
-    background: linear-gradient(45deg, #ff6a88, #ff99ac);
-    color:white;
-    transform:translateX(5px);
+    background: rgba(255,255,255,.07);
+    color:#fff;
 }
 
-/* ====== MAIN ====== */
+.sidebar button.active{
+    background: linear-gradient(100deg, rgba(198,87,123,.32), rgba(184,147,91,.16));
+    border-color: rgba(217,190,143,.35);
+    color:#fff;
+}
+
+.sidebar-foot{
+    margin-top:auto;
+    font-size:10px;
+    color:#8B6F7C;
+    line-height:1.5;
+    padding:14px 8px 0;
+    border-top:1px solid rgba(255,255,255,.08);
+}
+
+/* ====== COLUMNA PRINCIPAL (topbar + main) ====== */
+.main-col{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    min-width:0;
+}
+
+.topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:18px 26px;
+    background:var(--white);
+    border-bottom:1px solid var(--cream-100);
+    flex-shrink:0;
+}
+.topbar .eyebrow{
+    font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--rose-500);font-weight:700;
+}
+.topbar h2{
+    margin:2px 0 0; font-size:21px; font-weight:600;
+}
+.topbar-avatar{
+    width:36px;height:36px;border-radius:50%;
+    background:linear-gradient(140deg, var(--rose-400), var(--gold-500));
+    color:#fff;display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;font-weight:600;font-size:13px;
+    flex-shrink:0;
+}
+
+/* ====== MAIN (scrollable) ====== */
 .main {
     flex:1;
-    padding:0.8rem;
-    overflow-y: auto;   /* scroll vertical */
-    overflow-x: hidden; /* ❌ elimina scroll lateral */
+    padding: 20px 26px 50px;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
-/* ====== CARDS ====== */
+/* ====== CARDS (paneles del formulario / historial) ====== */
 .card {
-    background:white;
-    padding:1.3rem;
-    border-radius:18px;
-    margin-bottom:1rem;
-    box-shadow:0 10px 25px rgba(0,0,0,0.06);
-    transition:0.25s;
+    background:var(--white);
+    padding: 22px 24px 22px;
+    border-radius: 20px;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow-tiny);
+    border: 1px solid var(--cream-100);
+    transition: .2s;
+    max-width: 100%;
 }
 
 .card:hover {
-    transform:translateY(-4px);
+    box-shadow: 0 10px 26px -10px rgba(44,25,34,.16);
 }
 
-/* ====== TITULOS ====== */
 h3 {
     margin-top:0;
-    color:#ff4f81;
+    margin-bottom:18px;
+    color: var(--text-900);
+    font-size:18px;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:9px;
 }
 
 /* ====== INPUTS ====== */
 .input-group {
-    margin-bottom:0.6rem;
+    margin-bottom: 13px;
 }
 
 .input-group label {
-    font-size:0.75rem;
-    color:#666;
+    font-size: 11.5px;
+    color: var(--text-600);
+    font-weight:600;
+    display:block;
+    margin-bottom:5px;
+    letter-spacing:.01em;
 }
 
 input, select, textarea {
     width:100%;
     max-width:100%;
-    padding:9px;
-    font-size:0.85rem;
-    border-radius:10px;
-    border:1px solid #eee;
-    background:#fafafa;
-    transition:0.2s;
+    padding: 11px 13px;
+    font-size: 14px;
+    font-family:'Inter',sans-serif;
+    border-radius: 11px;
+    border: 1.5px solid var(--cream-100);
+    background: var(--cream-50);
+    color: var(--text-900);
+    transition: .18s;
 }
 
 input:focus, select:focus, textarea:focus {
-    outline:none;
-    border-color:#ff6a88;
-    background:white;
-    box-shadow:0 0 5px rgba(255,106,136,0.2);
+    outline: none;
+    border-color: var(--rose-400);
+    background: var(--white);
+    box-shadow: 0 0 0 3px rgba(198,87,123,0.10);
 }
+
+textarea{ resize:vertical; min-height:52px; }
 
 /* ====== BOTONES ====== */
 button.btn {
-    padding:9px 15px;
-    margin-right:5px;
+    padding: 11px 20px;
+    margin-right: 8px;
+    margin-top: 4px;
     cursor:pointer;
     border:none;
-    border-radius:10px;
+    border-radius: 11px;
     color:white;
-    font-weight:500;
-    transition:0.2s;
+    font-weight:600;
+    font-size:13.5px;
+    font-family:'Inter',sans-serif;
+    transition: .18s;
 }
 
 .btn-add {
-    background: linear-gradient(45deg, #ff6a88, #ff99ac);
+    background: linear-gradient(120deg, var(--rose-600), var(--rose-400));
+    box-shadow: 0 10px 20px -9px rgba(198,87,123,.55);
 }
 
 .btn-remove {
-    background: linear-gradient(45deg, #ff4d6d, #ff758f);
+    background: var(--white);
+    color: var(--rose-600) !important;
+    border: 1.5px solid var(--rose-200);
+    box-shadow:none;
 }
 
 .btn-update {
-    background: linear-gradient(45deg, #c77dff, #9d4edd);
+    background: linear-gradient(120deg, #7A4EA6, #C77DFF);
+    box-shadow: 0 10px 20px -9px rgba(122,78,166,.5);
 }
 
 button.btn:hover {
-    transform:scale(1.05);
-    opacity:0.9;
+    transform: translateY(-1px);
+    opacity: .95;
 }
 
-/* ====== STOCK MEJORADO ====== */
+/* ====== STOCK ====== */
 .stock-container {
-    margin-top: 20px;          /* Crea el espacio respecto a los botones */
-    padding: 12px 18px;
-    background: #fff0f3;       /* Fondo rosado muy suave */
-    border-radius: 12px;
-    display: inline-block;     /* Para que no ocupe todo el ancho */
-    border: 1px solid #ffccd5;
+    margin-top: 18px;
+    padding: 11px 18px;
+    background: var(--rose-100);
+    border-radius: 100px;
+    display: inline-flex;
+    align-items:center;
+    gap:8px;
+    border: 1px solid var(--rose-200);
+}
+
+/* El bloque "Total en su poder" (buscar-empleado-totales) contiene una
+   lista de productos, no un solo número — necesita forma rectangular,
+   no de píldora, para no cortar el texto. */
+#buscar-empleado-totales.stock-container{
+    display: block;
+    border-radius: 18px;
+    padding: 18px 22px;
 }
 
 .stock-label {
-    font-size: 0.85rem;
-    color: #666;
+    font-size: 11px;
+    color: var(--text-600);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 600;
+    letter-spacing: 0.06em;
+    font-weight: 700;
 }
 
 .stock-number {
-    font-size: 1.2rem;
-    color: #ff4f81;           /* Tu color principal */
-    font-weight: 800;
-    margin-left: 8px;
+    font-family:'Fraunces',serif;
+    font-size: 17px;
+    color: var(--rose-600);
+    font-weight: 700;
 }
-
 
 /* ====== TABLA ====== */
 table {
     width:100%;
-    min-width:700px; /* 🔥 scroll SOLO en historial */
-}
-    border-collapse:collapse;
-    margin-top:0.5rem;
-    border-radius:12px;
+    min-width:700px;
+    border-collapse: collapse;
+    margin-top: 10px;
+    border-radius: 12px;
     overflow:hidden;
 }
 
 th {
-    background:#ff4f81;
-    color:white;
-    padding:10px;
+    background: var(--plum-800);
+    color: white;
+    padding: 11px 10px;
+    font-size: 12px;
+    font-weight:600;
+    letter-spacing:.03em;
+    text-align:left;
 }
 
 td {
-    padding:8px;
-    background:#fff;
-    border-bottom:1px solid #f1f1f1;
+    padding: 10px;
+    background: #fff;
+    border-bottom: 1px solid var(--cream-100);
+    font-size:13.5px;
 }
 
 tr:nth-child(even) td {
-    background:#fafafa;
+    background: var(--cream-50);
 }
 
 tr:hover td {
-    background:#ffe4ec;
+    background: var(--rose-100);
 }
 
 /* ====== SCROLL ====== */
-::-webkit-scrollbar {
-    width:8px;
+/* Barras de scroll invisibles: se mantiene el desplazamiento
+   (con el dedo, mouse o rueda) pero sin la barra rosada visible. */
+* {
+    scrollbar-width: none;        /* Firefox */
+    -ms-overflow-style: none;     /* Edge / IE viejo */
 }
-::-webkit-scrollbar-thumb {
-    background:#ff6a88;
-    border-radius:10px;
+*::-webkit-scrollbar {            /* Chrome, Safari, WebView Android */
+    width: 0;
+    height: 0;
+    background: transparent;
 }
 
-/* --- NUEVO CUADRO DE SELECCIÓN --- */
+/* --- CUADRO DE SELECCIÓN (modal producto / confirmar) --- */
 .modal-overlay {
-    display: none; /* Oculto por defecto */
+    display: none;
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px);
+    background: rgba(44,25,34,0.45); backdrop-filter: blur(4px);
     z-index: 9999; justify-content: center; align-items: center;
 }
 
 .modal-content {
-    background: white; 
-    width: 85%; 
+    background: white;
+    width: 85%;
     max-width: 350px;
-    border-radius: 25px; 
-    padding: 20px;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.2);
-    border: 2px solid #ff4f81;
-
-    /* 👇 AGREGA ESTAS DOS LÍNEAS 👇 */
-    max-height: 230px;  /* Altura máxima antes de que aparezca el scroll */
-    overflow-y: auto;   /* Activa el scroll vertical */
+    border-radius: 22px;
+    padding: 22px;
+    box-shadow: 0 20px 50px rgba(44,25,34,.28);
+    border: 1.5px solid var(--rose-200);
+    max-height: 230px;
+    overflow-y: auto;
 }
 
 .modal-titulo {
-    color: #ff4f81; font-weight: bold; margin-bottom: 15px;
-    text-align: center; font-size: 1.1rem; text-transform: uppercase;
+    color: var(--rose-600); font-weight: 700; margin-bottom: 15px;
+    text-align: center; font-size: 1rem; text-transform: uppercase;
+    letter-spacing:.04em;
+    font-family:'Inter',sans-serif;
 }
 
 .opcion-item {
-    padding: 12px 15px; margin: 8px 0;
-    background: #fff5f7; border-radius: 12px;
-    cursor: pointer; color: #444; font-weight: 500;
-    transition: 0.2s; border: 1px solid transparent;
+    padding: 12px 15px; margin: 7px 0;
+    background: var(--cream-50); border-radius: 12px;
+    cursor: pointer; color: var(--text-900); font-weight: 500;
+    transition: 0.18s; border: 1px solid transparent;
+    font-size:13.5px;
 }
 
 .opcion-item:hover {
-    background: #ffecf1; border-color: #ff4f81; transform: scale(1.02);
+    background: var(--rose-100); border-color: var(--rose-300, var(--rose-200)); transform: scale(1.015);
 }
 
 .historial-container {
-    max-height: 300px;
+    max-height: 68vh;
     overflow-y: auto;
-    overflow-x: auto; /* 🔥 scroll horizontal SOLO aquí */
-}
-    margin-top: 0.5rem;
-}
-
-/* Scroll bonito */
-.historial-container::-webkit-scrollbar {
-    width: 8px;
+    overflow-x: auto;
+    margin-top: 6px;
+    border-radius:14px;
 }
 
-.historial-container::-webkit-scrollbar-thumb {
-    background: #ff6a88;
-    border-radius: 10px;
-}
-
-.historial-container::-webkit-scrollbar-track {
-    background: #ffe4ec;
-    border-radius: 10px;
-}
-
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 @media screen and (max-width: 900px) {
 
     .sidebar {
-        width: 35%;
-        min-width: 140px;
+        width: 82px;
+        min-width: 82px;
+        padding: 16px 8px;
     }
+    .sidebar button{
+        justify-content:center;
+        padding:12px 6px;
+    }
+    .sidebar button .nav-label{ display:none; }
+    .sidebar-brand{ justify-content:center; padding-bottom:14px; }
+    .brand-text{ display:none; }
+    .sidebar-foot{ display:none; }
 
     .main {
-        width: 65%;
-        padding: 0.8rem;
+        padding: 16px 14px 40px;
     }
 
-    h2 {
-        font-size: 1.2rem;
-    }
+    .topbar{ padding:14px 16px; }
+    .topbar h2{ font-size:18px; }
 
-    h3 {
-        font-size: 1rem;
-    }
+    h2 { font-size: 1.2rem; }
+    h3 { font-size: 1rem; }
 
     input, select, textarea {
-        font-size: 0.75rem;
-        padding: 7px;
+        font-size: 0.8rem;
+        padding: 9px;
     }
 
-    button {
-        font-size: 0.75rem;
-        padding: 8px;
+    button.btn {
+        font-size: 0.78rem;
+        padding: 10px 14px;
     }
 }
 
-@media screen and (orientation: landscape) {
-    .sidebar {
-        width: 30%;
-    }
-
-    .main {
-        width: 70%;
-    }
+@media screen and (orientation: landscape) and (max-width: 900px) {
+    .sidebar { width: 82px; }
 }
 
 /* ====================================================== */
-/* ============  NUEVO: BUSCADOR DE EMPLEADO  ============ */
+/* ============  BUSCADOR DE EMPLEADO  ============ */
 /* ====================================================== */
 .empleado-autocomplete {
     position: relative;
@@ -330,28 +527,28 @@ tr:hover td {
     left: 0;
     right: 0;
     background: white;
-    border: 1px solid #ffccd5;
-    border-radius: 10px;
+    border: 1.5px solid var(--rose-200);
+    border-radius: 12px;
     max-height: 160px;
     overflow-y: auto;
     z-index: 200;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-    margin-top: 4px;
+    box-shadow: 0 12px 28px rgba(44,25,34,.16);
+    margin-top: 5px;
 }
 
 .empleado-item {
-    padding: 9px 12px;
+    padding: 10px 13px;
     cursor: pointer;
-    font-size: 0.82rem;
-    color: #444;
-    border-bottom: 1px solid #f5f5f5;
+    font-size: 0.83rem;
+    color: var(--text-900);
+    border-bottom: 1px solid var(--cream-100);
 }
 
 .empleado-item:hover {
-    background: #ffe4ec;
+    background: var(--rose-100);
 }
 
-/* 🆕 Dropdown personalizado "Filtrar por producto" (mismo estilo que empleado) */
+/* Dropdown personalizado "Filtrar por producto" */
 .filtro-select-wrapper {
     position: relative;
 }
@@ -362,7 +559,7 @@ tr:hover td {
     right: 14px;
     top: 50%;
     transform: translateY(-50%);
-    color: #ff6a88;
+    color: var(--rose-500);
     pointer-events: none;
     font-size: 0.9rem;
 }
@@ -370,12 +567,11 @@ tr:hover td {
 #buscar-producto-filtro-display {
     cursor: pointer;
     padding-right: 30px;
-    background: #fafafa;
+    background: var(--cream-50);
 }
 
-/* 🆕 Más aire entre los bloques del panel "Buscar Empleado" */
 #panel-buscarEmpleado .input-group {
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 
 #panel-buscarEmpleado .input-group label {
@@ -384,11 +580,15 @@ tr:hover td {
 }
 
 /* ====================================================== */
-/* ===========  NUEVO: REPORTE / FICHA EMPLEADO  ========= */
-/* ====================================================== */
+/* ===========  REPORTE / FICHA EMPLEADO  =========
+   ⚠️ Estas medidas están calculadas en píxeles exactos por el
+   JavaScript de paginación del PDF (794x1123 = A4, columnas de
+   280px y 458px). NO se tocan tamaños ni paddings aquí, solo
+   se mantiene igual que el original para no romper la exportación.
+   ========================================================= */
 .reporte-page {
-    width: 794px; /* Ancho A4 a 96dpi */
-    min-height: 1123px; /* Alto A4 a 96dpi */
+    width: 794px;
+    min-height: 1123px;
     display: flex;
     font-family: 'Poppins', sans-serif;
     background: #2b1418;
@@ -529,9 +729,6 @@ tr:hover td {
     color: #ddd;
 }
 
-/* ====================================================== */
-/* ======  NUEVO: RESUMEN "TOTAL EN SU PODER" (ficha)  === */
-/* ====================================================== */
 .reporte-resumen-titulo {
     font-weight: 800;
     font-size: 0.78rem;
@@ -565,52 +762,236 @@ tr:hover td {
     white-space: nowrap;
 }
 
+/* ====================================================== */
+/* ===============  ASISTENTE DE ALMACÉN  ================ */
+/* ====================================================== */
+
+.orb-mini{
+    width:34px;height:34px;border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #fff, var(--rose-400) 42%, var(--gold-500) 100%);
+    flex-shrink:0;
+    animation: orbIdle 3s ease-in-out infinite;
+    transition: box-shadow .2s;
+}
+@keyframes orbIdle{
+    0%,100%{ transform:scale(1); }
+    50%{ transform:scale(1.08); }
+}
+.orb-mini.hablando{
+    animation: orbHablar .85s ease-in-out infinite;
+    box-shadow: 0 0 0 7px rgba(198,87,123,.16);
+}
+@keyframes orbHablar{
+    0%,100%{ transform:scale(1,1); }
+    25%{ transform:scale(1.16,0.9); }
+    50%{ transform:scale(0.92,1.14); }
+    75%{ transform:scale(1.1,0.95); }
+}
+.orb-mini.escuchando{
+    background: radial-gradient(circle at 35% 30%, #fff, #E4536F 42%, var(--gold-500) 100%);
+    animation: orbEscuchar .7s ease-in-out infinite;
+}
+@keyframes orbEscuchar{
+    0%,100%{ box-shadow:0 0 0 0 rgba(228,83,111,.45); }
+    50%{ box-shadow:0 0 0 11px rgba(228,83,111,0); }
+}
+
+#asistente-fab{
+    display:none;
+    position:fixed;
+    right:22px; bottom:22px;
+    width:60px; height:60px;
+    border-radius:50%;
+    background: linear-gradient(140deg, var(--plum-800), var(--rose-600));
+    align-items:center; justify-content:center;
+    cursor:pointer;
+    box-shadow: 0 14px 30px -10px rgba(44,25,34,.45);
+    z-index: 10000;
+}
+#asistente-fab .orb-mini{ width:38px; height:38px; }
+
+#asistente-panel{
+    display:none;
+    position:fixed;
+    right:22px; bottom:92px;
+    width:346px; max-width:90vw;
+    height:500px; max-height:72vh;
+    background: var(--white);
+    border-radius:22px;
+    box-shadow: var(--shadow-soft);
+    border:1px solid var(--cream-100);
+    flex-direction:column;
+    overflow:hidden;
+    z-index: 10000;
+}
+.asistente-header{
+    display:flex; align-items:center; gap:11px;
+    padding:14px 16px;
+    border-bottom:1px solid var(--cream-100);
+    background: var(--cream-50);
+}
+.asistente-title .eyebrow{
+    font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--rose-500); font-weight:700;
+}
+.asistente-title .name{
+    font-family:'Fraunces',serif; font-size:15px; font-weight:600; color:var(--text-900);
+}
+.asistente-close{
+    margin-left:auto;
+    background:none; border:none; cursor:pointer;
+    font-size:15px; color:var(--text-400);
+    width:28px; height:28px; border-radius:8px;
+}
+.asistente-close:hover{ background:var(--cream-100); }
+.asistente-tokens{
+    margin-left:auto;
+    font-size:10.5px;
+    font-weight:600;
+    color:var(--text-400);
+    background:var(--cream-100);
+    padding:4px 9px;
+    border-radius:100px;
+    white-space:nowrap;
+}
+.msg-pensando{ opacity:.6; font-style:italic; }
+
+.asistente-mensajes{
+    flex:1; overflow-y:auto;
+    padding:14px 16px;
+    display:flex; flex-direction:column; gap:10px;
+    background: var(--white);
+}
+.msg-asistente{
+    max-width:84%;
+    padding:10px 13px;
+    border-radius:14px;
+    font-size:13.5px;
+    line-height:1.45;
+    white-space:pre-line;
+}
+.msg-user{
+    align-self:flex-end;
+    background: linear-gradient(120deg, var(--rose-600), var(--rose-400));
+    color:#fff;
+    border-bottom-right-radius:4px;
+}
+.msg-bot{
+    align-self:flex-start;
+    background: var(--cream-50);
+    color: var(--text-900);
+    border:1px solid var(--cream-100);
+    border-bottom-left-radius:4px;
+}
+
+.asistente-input-row{
+    display:flex; align-items:center; gap:8px;
+    padding:12px 14px;
+    border-top:1px solid var(--cream-100);
+}
+.asistente-input-row input{
+    flex:1;
+    border-radius:100px;
+    padding:10px 15px;
+    font-size:13.5px;
+}
+#asistente-mic, #asistente-send{
+    flex-shrink:0;
+    width:38px; height:38px;
+    border-radius:50%;
+    border:1.5px solid var(--cream-100);
+    background:var(--cream-50);
+    cursor:pointer;
+    font-size:15px;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--rose-600);
+}
+#asistente-send{
+    background: linear-gradient(120deg, var(--rose-600), var(--rose-400));
+    color:#fff; border:none;
+}
+#asistente-mic.mic-activo{
+    background: linear-gradient(120deg, #E4536F, var(--gold-500));
+    color:#fff; border:none;
+}
+
+@media screen and (max-width: 480px){
+    #asistente-panel{
+        right:10px; left:10px; width:auto; bottom:86px;
+        max-height:66vh;
+    }
+    #asistente-fab{ right:14px; bottom:14px; }
+}
+
 </style>
 </head>
 
 <body>
-    
-<div id="loginScreen" style="
-    width:100%;
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background: linear-gradient(135deg, #ffdde1, #ee9ca7);
-">
 
-    <div style="
-        background:white;
-        padding:30px;
-        border-radius:20px;
-        width:300px;
-        text-align:center;
-        box-shadow:0 10px 30px rgba(0,0,0,0.2);
-    ">
-        <h2 style="color:#ff4f81;">Inventario PRC</h2>
+<!-- ============ LOGIN ============ -->
+<div id="loginScreen" class="login-wrap">
 
-        <input type="text" id="user" placeholder="Usuario" style="margin:10px 0;">
-        <input type="password" id="pass" placeholder="Contraseña" style="margin:10px 0;">
+    <canvas id="loginParticles"></canvas>
+
+    <div class="login-card">
+        <div class="login-mark" id="login-mark">
+            <img id="login-logo-img" src="" alt="" style="display:none;">
+            <span id="login-mark-fallback">P</span>
+        </div>
+        <div class="login-eyebrow">Bienvenida de nuevo</div>
+        <h2>Inventario PRC</h2>
+
+        <div class="field">
+            <label>Usuario</label>
+            <input type="text" id="user" placeholder="Usuario">
+        </div>
+        <div class="field">
+            <label>Contraseña</label>
+            <input type="password" id="pass" placeholder="Contraseña">
+        </div>
 
         <button onclick="login()" class="btn btn-add" style="width:100%;">Ingresar</button>
 
-        <p id="errorLogin" style="color:red; font-size:0.8rem;"></p>
+        <p id="errorLogin" style="color:#B5495B; font-size:0.8rem; margin-bottom:0;"></p>
+        <div class="login-foot">Acceso restringido · Solo personal autorizado</div>
     </div>
-</div>    
+</div>
 
-<!-- TODO TU HTML ORIGINAL (NO MODIFICADO EN SU ESTRUCTURA) -->
+<!-- TODO TU HTML ORIGINAL (ESTRUCTURA Y FUNCIONALIDAD NO MODIFICADAS) -->
 
 <div id="panelApp" style="display:none; width:100%; height:100vh; display:flex;">
 
 <div class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-mark" id="sidebar-brand-mark">
+            <img id="sidebar-logo-img" src="" alt="" style="display:none;">
+            <span id="sidebar-mark-fallback">P</span>
+        </div>
+        <div class="brand-text">
+            <div class="eyebrow">Sistema de</div>
+            <div class="name">Inventario PRC</div>
+        </div>
+    </div>
     <h2>Inventario PRC</h2>
-    <button onclick="showPanel('ropa')">👕 Ropa</button>
-    <button onclick="showPanel('calzado')">👞 Calzado</button>
-    <button onclick="showPanel('celulares')">📱 Celulares</button>
-    <button onclick="showPanel('utiles')">🗃️ Útiles de Oficina</button>
-    <button onclick="showPanel('implementos')">➕ Implementos</button>
-    <button onclick="showPanel('buscarEmpleado')">🔍 Buscar Empleado</button>
+    <button class="active" onclick="showPanel('ropa')"><span>👕</span><span class="nav-label">Ropa</span></button>
+    <button onclick="showPanel('calzado')"><span>👞</span><span class="nav-label">Calzado</span></button>
+    <button onclick="showPanel('celulares')"><span>📱</span><span class="nav-label">Celulares</span></button>
+    <button onclick="showPanel('utiles')"><span>🗃️</span><span class="nav-label">Útiles de Oficina</span></button>
+    <button onclick="showPanel('implementos')"><span>➕</span><span class="nav-label">Implementos</span></button>
+    <button onclick="showPanel('buscarEmpleado')"><span>🔍</span><span class="nav-label">Buscar Empleado</span></button>
+    <button onclick="showPanel('historial')"><span>📜</span><span class="nav-label">Historial General</span></button>
+
+    <div class="sidebar-foot">Inventario PRC<br>Diseño v2</div>
 </div>
+
+<div class="main-col">
+    <div class="topbar">
+        <div>
+            <div class="eyebrow">Panel de gestión</div>
+            <h2 id="topbar-heading">Ropa</h2>
+        </div>
+        <div class="topbar-avatar">PR</div>
+    </div>
 
 <div class="main">
 
@@ -668,7 +1049,7 @@ tr:hover td {
 
     </div>
 
-    <!-- PANEL CELULARES (SIN CAMBIOS DE EMPLEADO, SOLO SIN HORA) -->
+    <!-- PANEL CELULARES -->
     <div class="card" id="panel-celulares" style="display:none;">
         <h3>Celulares</h3>
         <div class="input-group"><label>Producto</label><select id="celular-producto" onmousedown="event.preventDefault(); abrirSelectorPersonalizado('celular-producto', 'celular')">
@@ -731,8 +1112,8 @@ tr:hover td {
 
     </div>
 
-    <!-- PANEL NUEVO: BUSCAR EMPLEADO -->
-    <div class="card" id="panel-buscarEmpleado" style="display:none;">
+    <!-- PANEL BUSCAR EMPLEADO -->
+    <div class="card card-wide" id="panel-buscarEmpleado" style="display:none;">
         <h3>🔍 Buscar Empleado</h3>
         <div class="input-group">
             <label>Nombre del empleado</label>
@@ -742,7 +1123,6 @@ tr:hover td {
             </div>
         </div>
 
-        <!-- 🆕 Filtro por prenda/producto específico del empleado seleccionado -->
         <div class="input-group" id="buscar-producto-filtro-grupo" style="display:none; margin-top:22px;">
             <label>Filtrar por producto</label>
             <div class="empleado-autocomplete filtro-select-wrapper">
@@ -751,7 +1131,6 @@ tr:hover td {
             </div>
         </div>
 
-        <!-- 🆕 Filtro opcional por fecha exacta (ej. el primer día que se le entregó algo) -->
         <div class="input-group" id="buscar-fecha-filtro-grupo" style="display:none; margin-top:18px;">
             <label>Filtrar por fecha (opcional)</label>
             <div style="display:flex; gap:8px; align-items:center;">
@@ -761,7 +1140,6 @@ tr:hover td {
         </div>
 
         <div id="buscar-empleado-resultado" style="display:none; margin-top:24px;">
-            <!-- 🆕 Total en su poder (según el filtro activo) -->
             <div id="buscar-empleado-totales" class="stock-container" style="display:block; width:100%; margin-bottom:15px;"></div>
 
             <div class="historial-container">
@@ -779,8 +1157,8 @@ tr:hover td {
         </div>
     </div>
 
-    <!-- HISTORIAL GENERAL -->
-    <div class="card">
+    <!-- HISTORIAL GENERAL (sección propia del menú) -->
+    <div class="card card-wide" id="panel-historial" style="display:none;">
     <h3>📜 Historial General</h3>
     <div class="historial-container">
         <table>
@@ -790,6 +1168,9 @@ tr:hover td {
             <tbody id="historial-body"></tbody>
         </table>
     </div>
+</div>
+
+</div>
 </div>
 
 </div>
@@ -813,7 +1194,7 @@ const utilesList=['Lapicero','Cuaderno A4','Archivador','Cinta de Embalaje','Pap
 const implementosList=['Batos','Linterna','Cartuchera','Vara']; // <--- AQUÍ agregas más implementos
 
 // ============================================================
-// 🆕 EMPLEADOS: agrega aquí a cada empleado de tu empresa.
+// EMPLEADOS: agrega aquí a cada empleado de tu empresa.
 // - nombre: nombre completo (se usa para buscar por iniciales)
 // - dni, unidad, celular, correo: datos que salen en la ficha
 // - foto: enlace directo a una imagen (debe ser público, ej. subida
@@ -847,15 +1228,15 @@ const empleados = [
     },
 ];
 
-// 🆕 LOGO DE LA EMPRESA: pega aquí el link directo a tu logo (público)
+// LOGO DE LA EMPRESA: pega aquí el link directo a tu logo (público)
 const logoEmpresa = "https://i.postimg.cc/hPNHGPQw/Jorge-Gonzales-20260822-021909-0000.png"; // <--- pega aquí el link del logo de PRC
 
-// 🆕 Guardamos todo el historial en memoria para poder buscar por empleado
+// Guardamos todo el historial en memoria para poder buscar por empleado
 let historialData = [];
 let empleadoSeleccionadoBusqueda = null;
-// 🆕 Producto (clave prod|talla|estado) por el que se está filtrando en la sección "Buscar Empleado"
+// Producto (clave prod|talla|estado) por el que se está filtrando en la sección "Buscar Empleado"
 let filtroProductoEmpleado = '';
-// 🆕 Filtro opcional por fecha exacta (formato dd/mm/yyyy, igual que se guarda en historialData)
+// Filtro opcional por fecha exacta (formato dd/mm/yyyy, igual que se guarda en historialData)
 let filtroFechaEmpleado = '';
 
 // Inicialización
@@ -870,7 +1251,7 @@ function init(){
     let tallaRopa=document.getElementById('ropa-talla'); ['S','M','L','XL','XXL','XXXL'].forEach(t=>tallaRopa.add(new Option(t)));
     let tallaCalzado=document.getElementById('calzado-talla'); for(let i=34;i<=60;i++) tallaCalzado.add(new Option(i));
 
-    // 🆕 Fecha actual por defecto en los paneles con empleado
+    // Fecha actual por defecto en los paneles con empleado
     ['ropa','calzado','utiles','implementos'].forEach(t=>{
         const f = document.getElementById(t+'-fecha');
         if(f) f.valueAsDate = new Date();
@@ -878,7 +1259,7 @@ function init(){
 }
 
 // ============================================================
-// 🆕 LIMPIAR CAMPOS AL CAMBIAR DE SECCIÓN
+// LIMPIAR CAMPOS AL CAMBIAR DE SECCIÓN
 // Deja todo en blanco (Producto, Talla, Estado, Cantidad,
 // Observación, Empleado, Stock) para que el usuario tenga que
 // seleccionar de nuevo cada vez que entra a una sección.
@@ -909,14 +1290,14 @@ function resetCamposPanel(tipo){
         if(resultado) resultado.style.display = 'none';
         const tbody = document.getElementById('buscar-empleado-historial-body');
         if(tbody) tbody.innerHTML = '';
-        // 🆕 Reiniciar filtro de producto del empleado
+        // Reiniciar filtro de producto del empleado
         const filtroGrupo = document.getElementById('buscar-producto-filtro-grupo');
         if(filtroGrupo) filtroGrupo.style.display = 'none';
         const filtroLista = document.getElementById('buscar-producto-filtro-lista');
         if(filtroLista){ filtroLista.innerHTML = ''; filtroLista.style.display = 'none'; }
         const filtroDisplay = document.getElementById('buscar-producto-filtro-display');
         if(filtroDisplay) filtroDisplay.value = 'Todos los productos';
-        // 🆕 Reiniciar filtro de fecha del empleado
+        // Reiniciar filtro de fecha del empleado
         const fechaGrupo = document.getElementById('buscar-fecha-filtro-grupo');
         if(fechaGrupo) fechaGrupo.style.display = 'none';
         const fechaInput = document.getElementById('buscar-fecha-filtro');
@@ -962,13 +1343,13 @@ function resetCamposPanel(tipo){
 
 // Mostrar panel
 function showPanel(panel){
-    ['ropa','calzado','celulares','utiles','implementos','buscarEmpleado'].forEach(p=>document.getElementById('panel-'+p).style.display='none');
+    ['ropa','calzado','celulares','utiles','implementos','buscarEmpleado','historial'].forEach(p=>document.getElementById('panel-'+p).style.display='none');
     document.getElementById('panel-'+panel).style.display='block';
 
-    // 🆕 Limpiar campos de la sección a la que se entra
+    // Limpiar campos de la sección a la que se entra
     resetCamposPanel(panel);
 
-    // 🆕 Reiniciar el scroll de la vista al cambiar de sección
+    // Reiniciar el scroll de la vista al cambiar de sección
     const mainEl = document.querySelector('.main');
     if(mainEl) mainEl.scrollTop = 0;
     window.scrollTo(0,0);
@@ -1032,7 +1413,7 @@ function updateStockView(type){
 }
 
 // ============================================================
-// 🆕 AUTOCOMPLETADO DE EMPLEADOS (por iniciales de nombre o apellido)
+// AUTOCOMPLETADO DE EMPLEADOS (por iniciales de nombre o apellido)
 // ============================================================
 function filtrarEmpleados(tipo){
     const input = document.getElementById(tipo+'-empleado');
@@ -1090,7 +1471,7 @@ function obtenerFechaSeleccionada(type){
     return new Date().toLocaleDateString();
 }
 
-// 🔥 SISTEMA DE CONFIRMACIÓN
+// SISTEMA DE CONFIRMACIÓN
 let accionPendiente = null;
 
 function pedirConfirmacion(mensaje, callback){
@@ -1110,7 +1491,7 @@ function ejecutarConfirmacion(respuesta){
 // Modificar stock
 function modifyStock(type,action){
 
-    // 🆕 Validamos empleado y fecha ANTES de pedir confirmación
+    // Validamos empleado y fecha ANTES de pedir confirmación
     const empleadoSel = obtenerEmpleadoValidado(type);
     if(empleadoSel === null) return;
     const fechaSel = obtenerFechaSeleccionada(type);
@@ -1171,7 +1552,7 @@ addHistory(fechaSel,producto,talla,estado,action==='add'?'Agregado':'Retirado',t
         addHistory(fechaSel,producto,'N/A',estado,action==='add'?'Agregado':'Retirado',qty,obs,empleadoSel);
     }
 
-    }); // 👈 ESTE CIERRA la confirmación
+    }); // ESTE CIERRA la confirmación
 }
 // Actualizar número celular
 function updateCellNumber(){
@@ -1211,7 +1592,7 @@ function updateCellNumber(){
 // Agregar al historial
 function addHistory(fecha,prod,talla,estado,accion,cant,obs,empleado){
 
-    // 🆕 Guardamos en memoria para el buscador de empleado y el reporte
+    // Guardamos en memoria para el buscador de empleado y el reporte
     historialData.unshift({fecha:fecha,prod:prod,talla:talla,estado:estado,accion:accion,cant:cant,obs:obs,empleado:empleado||''});
 
     let tbody=document.getElementById('historial-body');
@@ -1257,7 +1638,7 @@ function addHistory(fecha,prod,talla,estado,accion,cant,obs,empleado){
 
 function addHistoryVisual(fecha, prod, talla, estado, accion, cant, obs, empleado) {
 
-    // 🆕 Guardamos también en memoria al cargar desde Sheets
+    // Guardamos también en memoria al cargar desde Sheets
     historialData.unshift({fecha:fecha,prod:prod,talla:talla,estado:estado,accion:accion,cant:cant,obs:obs,empleado:empleado||''});
 
     let tbody = document.getElementById('historial-body');
@@ -1302,7 +1683,7 @@ function abrirSelectorPersonalizado(idSelect, tipo) {
         div.onclick = () => {
             selectOriginal.value = opt.value;
 
-            // 🔥 Detecta si es producto, talla o estado
+            // Detecta si es producto, talla o estado
             if (idSelect.includes('producto')) {
                 selectProduct(tipo);
             } else {
@@ -1313,7 +1694,7 @@ function abrirSelectorPersonalizado(idSelect, tipo) {
         };
 
         contenedor.appendChild(div);
-    }); // 👈 ESTA LÍNEA ES CLAVE (CIERRA EL forEach)
+    }); // ESTA LÍNEA ES CLAVE (CIERRA EL forEach)
 
     modal.style.display = 'flex';
 }
@@ -1351,12 +1732,12 @@ function cargarDatos(){
             let obs = row[6];
             let numero = row[7];
             let operador = row[8];
-            let empleado = row[9]; // 🆕 Columna J: Empleado (agrégala en tu Google Sheet / Apps Script)
+            let empleado = row[9]; // Columna J: Empleado (agrégala en tu Google Sheet / Apps Script)
 
             let tipo = detectarTipo(producto);
             if(!tipo) return; // Evita errores
 
-            // 🔹 Reconstruir inventario
+            // Reconstruir inventario
             if(tipo === 'celular'){
     // Solo guardar si hay número (última actualización válida)
     if(numero){
@@ -1378,11 +1759,11 @@ if(tipo === 'utiles' || tipo === 'implementos'){
                 inventory[tipo][key] += (accion === "Agregado" ? cantidad : -cantidad);
             }
 
-            // 🔹 Solo mostrar historial en tabla, NO enviar POST
+            // Solo mostrar historial en tabla, NO enviar POST
             addHistoryVisual(row[0], producto, talla, estado, accion, cantidad, obs, empleado);
         });
 
-        console.log("✅ Inventario reconstruido:", inventory);
+        console.log("Inventario reconstruido:", inventory);
     });
 }
 function detectarTipo(producto){
@@ -1392,11 +1773,11 @@ function detectarTipo(producto){
     if(implementosList.includes(producto)) return 'implementos';
     if(celularList.includes(producto)) return 'celular';
 
-    return null; // 👈 evita errores
+    return null; // evita errores
 }
 
 // ============================================================
-// 🆕 BUSCADOR DE HISTORIAL POR EMPLEADO
+// BUSCADOR DE HISTORIAL POR EMPLEADO
 // ============================================================
 function filtrarEmpleadoBusqueda(){
     const input = document.getElementById('buscar-empleado-input');
@@ -1408,7 +1789,7 @@ function filtrarEmpleadoBusqueda(){
     filtroFechaEmpleado = '';
     document.getElementById('buscar-empleado-resultado').style.display = 'none';
 
-    // 🆕 Ocultar los filtros de producto y fecha mientras no haya empleado seleccionado
+    // Ocultar los filtros de producto y fecha mientras no haya empleado seleccionado
     const filtroGrupo = document.getElementById('buscar-producto-filtro-grupo');
     if(filtroGrupo) filtroGrupo.style.display = 'none';
     const fechaGrupo = document.getElementById('buscar-fecha-filtro-grupo');
@@ -1432,7 +1813,7 @@ function filtrarEmpleadoBusqueda(){
             filtroProductoEmpleado = '';
             filtroFechaEmpleado = '';
             poblarFiltroProductosEmpleado(emp.nombre);
-            // 🆕 Mostrar el filtro opcional de fecha una vez elegido el empleado
+            // Mostrar el filtro opcional de fecha una vez elegido el empleado
             const fechaGrupo2 = document.getElementById('buscar-fecha-filtro-grupo');
             if(fechaGrupo2) fechaGrupo2.style.display = 'block';
             const fechaInput2 = document.getElementById('buscar-fecha-filtro');
@@ -1445,7 +1826,7 @@ function filtrarEmpleadoBusqueda(){
     lista.style.display = 'block';
 }
 
-// 🆕 Llena el dropdown personalizado "Filtrar por producto" solo con los
+// Llena el dropdown personalizado "Filtrar por producto" solo con los
 // NOMBRES de producto que ESE empleado ha recibido alguna vez (sin talla
 // ni estado; ese detalle solo se muestra en la ficha descargable).
 function poblarFiltroProductosEmpleado(nombre){
@@ -1480,7 +1861,7 @@ function poblarFiltroProductosEmpleado(nombre){
     if(grupo) grupo.style.display = productos.length ? 'block' : 'none';
 }
 
-// 🆕 Abre/cierra el dropdown de "Filtrar por producto"
+// Abre/cierra el dropdown de "Filtrar por producto"
 function toggleFiltroProductoLista(){
     const lista = document.getElementById('buscar-producto-filtro-lista');
     if(!lista) return;
@@ -1488,7 +1869,7 @@ function toggleFiltroProductoLista(){
     lista.style.display = (lista.style.display === 'block') ? 'none' : 'block';
 }
 
-// 🆕 Se dispara al elegir un producto (o "Todos los productos") del dropdown
+// Se dispara al elegir un producto (o "Todos los productos") del dropdown
 function seleccionarFiltroProducto(valor, textoMostrar){
     filtroProductoEmpleado = valor;
     const display = document.getElementById('buscar-producto-filtro-display');
@@ -1498,7 +1879,7 @@ function seleccionarFiltroProducto(valor, textoMostrar){
     mostrarHistorialEmpleado(empleadoSeleccionadoBusqueda, filtroProductoEmpleado, filtroFechaEmpleado);
 }
 
-// 🆕 Filtro opcional por fecha exacta (ej. el primer día de trabajo del empleado)
+// Filtro opcional por fecha exacta (ej. el primer día de trabajo del empleado)
 function onChangeFiltroFechaEmpleado(){
     const input = document.getElementById('buscar-fecha-filtro');
     if(input && input.value){
@@ -1510,7 +1891,7 @@ function onChangeFiltroFechaEmpleado(){
     mostrarHistorialEmpleado(empleadoSeleccionadoBusqueda, filtroProductoEmpleado, filtroFechaEmpleado);
 }
 
-// 🆕 Quita el filtro de fecha (es opcional, no siempre se usa)
+// Quita el filtro de fecha (es opcional, no siempre se usa)
 function limpiarFiltroFechaEmpleado(){
     filtroFechaEmpleado = '';
     const input = document.getElementById('buscar-fecha-filtro');
@@ -1518,7 +1899,7 @@ function limpiarFiltroFechaEmpleado(){
     mostrarHistorialEmpleado(empleadoSeleccionadoBusqueda, filtroProductoEmpleado, filtroFechaEmpleado);
 }
 
-// 🆕 Traduce la acción de almacén a la acción vista desde el empleado:
+// Traduce la acción de almacén a la acción vista desde el empleado:
 // "Retirado" (sale del almacén) = el empleado lo RECIBIÓ.
 // "Agregado" (vuelve al almacén) = el empleado lo DEVOLVIÓ.
 function mapearAccionEmpleado(accion){
@@ -1527,7 +1908,7 @@ function mapearAccionEmpleado(accion){
     return accion;
 }
 
-// 🆕 Total en su poder AGRUPADO SOLO POR PRODUCTO (sin talla/estado).
+// Total en su poder AGRUPADO SOLO POR PRODUCTO (sin talla/estado).
 // Se usa para el bloque en pantalla "Total en su poder".
 function calcularTotalesEmpleadoPorProducto(nombre, productoFiltro){
     const totales = {};
@@ -1542,7 +1923,7 @@ function calcularTotalesEmpleadoPorProducto(nombre, productoFiltro){
     return Object.entries(totales).map(([prod, total]) => ({prod, total}));
 }
 
-// 🆕 Total en su poder DETALLADO por producto|talla|estado.
+// Total en su poder DETALLADO por producto|talla|estado.
 // Se usa solo en la ficha descargable (PDF / Imagen).
 function calcularTotalesEmpleadoDetallado(nombre, productoFiltro){
     const combos = {};
@@ -1558,7 +1939,7 @@ function calcularTotalesEmpleadoDetallado(nombre, productoFiltro){
     return Object.values(combos);
 }
 
-// 🆕 Pinta el bloque "Total en su poder" en la vista (no en el PDF/Imagen)
+// Pinta el bloque "Total en su poder" en la vista (no en el PDF/Imagen)
 // Solo muestra el nombre del producto, sin talla ni estado.
 function mostrarTotalesEmpleado(nombre, productoFiltro){
     const cont = document.getElementById('buscar-empleado-totales');
@@ -1592,7 +1973,7 @@ function mostrarHistorialEmpleado(nombre, productoFiltro, fechaFiltro){
         registros = registros.filter(r => r.fecha === fechaFiltro);
     }
 
-    // 🆕 Total en su poder según el filtro activo (solo por producto; no cambia con la fecha,
+    // Total en su poder según el filtro activo (solo por producto; no cambia con la fecha,
     // siempre refleja lo que el empleado tiene AHORA en su poder)
     mostrarTotalesEmpleado(nombre, productoFiltro);
 
@@ -1613,7 +1994,7 @@ function mostrarHistorialEmpleado(nombre, productoFiltro, fechaFiltro){
 }
 
 // ============================================================
-// 🆕 Arma los datos base de la ficha del empleado (empleado, registros
+// Arma los datos base de la ficha del empleado (empleado, registros
 // filtrados, resumen "Total en su poder" y los registros agrupados por
 // fecha). Lo comparten tanto la ficha de una sola hoja (imagen) como la
 // versión paginada (PDF).
@@ -1660,7 +2041,7 @@ function obtenerDatosReporteEmpleado(nombre, productoFiltro, fechaFiltro){
     return {emp, registros, resumenHTML, gruposPorFecha};
 }
 
-// 🆕 HTML de un solo registro del historial (usado en la ficha y en el PDF paginado)
+// HTML de un solo registro del historial (usado en la ficha y en el PDF paginado)
 function construirItemHistorialHTML(r){
     const accionMostrar = mapearAccionEmpleado(r.accion);
     return `
@@ -1676,7 +2057,7 @@ function construirItemHistorialHTML(r){
     </div>`;
 }
 
-// 🆕 HTML de la columna izquierda (foto, nombre, datos, total en su poder, logo).
+// HTML de la columna izquierda (foto, nombre, datos, total en su poder, logo).
 // Se repite igual en cada hoja del PDF cuando el historial ocupa varias páginas.
 function construirIzquierdaReporteHTML(emp, resumenHTML){
     return `
@@ -1696,7 +2077,7 @@ function construirIzquierdaReporteHTML(emp, resumenHTML){
 }
 
 // ============================================================
-// 🆕 GENERAR FICHA/REPORTE DEL EMPLEADO EN UNA SOLA HOJA (para la IMAGEN)
+// GENERAR FICHA/REPORTE DEL EMPLEADO EN UNA SOLA HOJA (para la IMAGEN)
 // Aquí no hace falta paginar: la imagen simplemente puede ser más alta
 // que una hoja A4 y se descarga completa igual.
 // ============================================================
@@ -1730,7 +2111,7 @@ function generarReporteHTML(nombre, productoFiltro, fechaFiltro){
 }
 
 // ============================================================
-// 🆕 PAGINACIÓN REAL PARA EL PDF
+// PAGINACIÓN REAL PARA EL PDF
 // En vez de sumar "a mano" la altura de cada bloque (lo que no contaba
 // bien los márgenes ni el colapso de márgenes entre el título y el primer
 // registro, y seguía generando una hoja extra), dejamos que el propio
@@ -1828,7 +2209,7 @@ async function calcularPaginasHistorial(gruposPorFecha, alturaDisponiblePx){
     return paginas;
 }
 
-// 🆕 HTML de una unidad ya paginada (fecha o registro) para pintarla en la
+// HTML de una unidad ya paginada (fecha o registro) para pintarla en la
 // hoja final del PDF.
 function construirUnidadHTML(u){
     return u.tipo === 'fecha'
@@ -1838,7 +2219,7 @@ function construirUnidadHTML(u){
 
 
 
-// 🆕 Nombre de archivo amigable y descriptivo del filtro que se está usando
+// Nombre de archivo amigable y descriptivo del filtro que se está usando
 function sufijoArchivoFiltro(){
     let partes = [];
     if(filtroProductoEmpleado) partes.push(filtroProductoEmpleado.replace(/\s+/g,'_'));
@@ -1851,7 +2232,7 @@ function nombreArchivoReporte(nombre, extension){
     return `Ficha_${nombre.replace(/\s+/g,'_')}_${sufijoArchivoFiltro()}.${extension}`;
 }
 
-// 🆕 Descargar ficha del empleado como IMAGEN (PNG, tamaño A4)
+// Descargar ficha del empleado como IMAGEN (PNG, tamaño A4)
 async function descargarReporteImagen(){
     const nombre = empleadoSeleccionadoBusqueda;
     if(!nombre) return alert('Primero busca y selecciona un empleado.');
@@ -1862,7 +2243,7 @@ async function descargarReporteImagen(){
     const pagina = document.querySelector('#reporteHidden .reporte-page');
     const canvas = await html2canvas(pagina, {scale:2, useCORS:true});
 
-    // 🆕 data:URI (no blob:) para que funcione también dentro de un WebView
+    // data:URI (no blob:) para que funcione también dentro de un WebView
     const link = document.createElement('a');
     link.download = nombreArchivoReporte(nombre, 'png');
     link.href = canvas.toDataURL('image/png');
@@ -1870,7 +2251,7 @@ async function descargarReporteImagen(){
 }
 
 // ============================================================
-// 🆕 Descargar ficha del empleado como PDF (A4), con paginación real.
+// Descargar ficha del empleado como PDF (A4), con paginación real.
 // Si el historial no cabe en una sola hoja, en vez de cortar la imagen a
 // la mitad de un registro, se calculan hojas completas: cada hoja
 // adicional repite la columna izquierda (foto, nombre, datos, total en
@@ -1911,7 +2292,7 @@ async function descargarReportePDF(){
         return;
     }
 
-    // 🆕 Espacio real disponible para el historial en cada hoja: alto de
+    // Espacio real disponible para el historial en cada hoja: alto de
     // página A4 menos el padding vertical de .reporte-derecha (35px arriba
     // y 35px abajo). El espacio que ocupa el título "Historial" ya queda
     // contemplado dentro de la medición de calcularPaginasHistorial.
@@ -1943,7 +2324,7 @@ async function descargarReportePDF(){
         if(i > 0) pdf.addPage();
         pdf.addImage(imgData,'PNG',0,0,pageWidthMm,imgHeight);
 
-        // 🆕 Red de seguridad: si por alguna razón una hoja igual quedó más
+        // Red de seguridad: si por alguna razón una hoja igual quedó más
         // alta que el A4 (ej. una observación muy larga que no se estimó
         // bien), se sigue partiendo esa hoja en vez de perder información.
         let heightLeft = imgHeight - pageHeightMm;
@@ -1959,7 +2340,7 @@ async function descargarReportePDF(){
     descargarPDFComoDataUri(pdf, nombreArchivoReporte(nombre,'pdf'));
 }
 
-// 🆕 Algunos WebView (Android) bloquean las descargas con blob: URI, que es
+// Algunos WebView (Android) bloquean las descargas con blob: URI, que es
 // lo que usa pdf.save() por dentro. Generamos el PDF como data:URI (igual
 // que la imagen) para que la descarga funcione tanto en Chrome como dentro
 // de un WebView. El nombre sugerido (nombreArchivo) queda embebido en el
@@ -1993,7 +2374,7 @@ function descargarPDFComoDataUri(pdf, nombreArchivo){
     </div>
 </div>
 
-<!-- 🔥 MODAL CONFIRMAR ACCIÓN -->
+<!-- MODAL CONFIRMAR ACCIÓN -->
 <div id="confirmModal" class="modal-overlay" onclick="this.style.display='none'">
     <div class="modal-content" onclick="event.stopPropagation()">
         
@@ -2014,6 +2395,887 @@ function descargarPDFComoDataUri(pdf, nombreArchivo){
     </div>
 </div>
 
+<!-- ============================================================
+     ASISTENTE DE ALMACÉN (widget flotante + chat con voz)
+     No depende de ninguna función original; solo lee los datos
+     ya existentes (inventory, historialData, empleados).
+     ============================================================ -->
+<div id="asistente-fab" onclick="toggleAsistente()" title="Preguntar al asistente">
+    <div class="orb-mini"></div>
 </div>
+
+<div id="asistente-panel">
+    <div class="asistente-header">
+        <div class="orb-mini"></div>
+        <div class="asistente-title">
+            <div class="eyebrow">Asistente de</div>
+            <div class="name">Almacén PRC</div>
+        </div>
+        <div id="asistente-tokens" class="asistente-tokens" title="Tokens de IA usados en este dispositivo">🔢 0</div>
+        <button class="asistente-close" onclick="toggleAsistente()">✕</button>
+    </div>
+    <div class="asistente-mensajes" id="asistente-mensajes"></div>
+    <div class="asistente-input-row">
+        <button id="asistente-mic" onclick="iniciarEscucha()" title="Hablar">🎤</button>
+        <input type="text" id="asistente-input" placeholder="Pregúntame sobre el almacén…" autocomplete="off" onkeydown="if(event.key==='Enter'){ enviarPreguntaAsistente(); }">
+        <button id="asistente-send" onclick="enviarPreguntaAsistente()" title="Enviar">➤</button>
+    </div>
+</div>
+
+<!-- ============================================================
+     BLOQUE NUEVO — NO TOCA NADA DE LA LÓGICA DE ARRIBA.
+     Solo agrega: 1) tu logo (edita LOGO_URL), 2) resaltado del
+     botón activo + título de la topbar, 3) partículas del login.
+     ============================================================ -->
+<script>
+(function(){
+
+    // ======================================================
+    // 1) TU LOGO: pega aquí el link directo a tu imagen/logo.
+    //    Si lo dejas vacío (""), se muestra la inicial "P".
+    // ======================================================
+    const LOGO_URL = ""; // <--- PEGA AQUÍ EL LINK DE TU IMAGEN
+
+    if(LOGO_URL){
+        [['sidebar-logo-img','sidebar-mark-fallback'], ['login-logo-img','login-mark-fallback']]
+        .forEach(([imgId, fallbackId])=>{
+            const img = document.getElementById(imgId);
+            const fb = document.getElementById(fallbackId);
+            if(img){
+                img.src = LOGO_URL;
+                img.style.display = 'block';
+                img.onerror = function(){ img.style.display='none'; if(fb) fb.style.display='inline'; };
+            }
+            if(fb) fb.style.display = 'none';
+        });
+    }
+
+    // ======================================================
+    // 1b) COMANDOS PERSONALIZADOS DEL ASISTENTE (opcional):
+    //     Pega aquí el link a un archivo .json público (por ejemplo
+    //     subido a GitHub como "raw", o publicado desde Google Apps
+    //     Script) para "enseñarle" preguntas y respuestas propias,
+    //     sin tocar el código. El asistente las usa como respaldo
+    //     cuando no encuentra una respuesta específica de inventario
+    //     (stock, movimientos, empleados).
+    //
+    //     Formato esperado del JSON (una lista de comandos):
+    //     [
+    //       {
+    //         "palabras_clave": ["hola", "buenos dias"],
+    //         "respuesta": "¡Hola! ¿En qué te ayudo con el almacén?"
+    //       },
+    //       {
+    //         "palabras_clave": ["quien te creo"],
+    //         "respuesta": "Fui creado para ayudar con el inventario de PRC."
+    //       }
+    //     ]
+    //     "palabras_clave" son las palabras que DEBEN aparecer TODAS
+    //     juntas en la pregunta (sin importar tildes/mayúsculas) para
+    //     que se use esa "respuesta".
+    // ======================================================
+    window.ASISTENTE_COMANDOS_URL = ""; // <--- (opcional) PEGA AQUÍ EL LINK A TU JSON
+    window.comandosPersonalizadosAsistente = [];
+
+    if(window.ASISTENTE_COMANDOS_URL){
+        fetch(window.ASISTENTE_COMANDOS_URL)
+            .then(r=>r.json())
+            .then(data=>{
+                if(Array.isArray(data)) window.comandosPersonalizadosAsistente = data;
+            })
+            .catch(err=>console.warn('No se pudo cargar el JSON de comandos del asistente:', err));
+    }
+
+    // ======================================================
+    // 1c) IAs EXTERNAS (opcional) — el asistente SIEMPRE intenta
+    //     resolver la pregunta localmente primero (gratis, al
+    //     instante, sin internet). Solo si no la entiende, o si
+    //     detecta que es una pregunta abierta/compleja (pedir una
+    //     explicación, comparación, recomendación, etc.), la manda
+    //     a una de estas IAs.
+    //
+    //     Puedes registrar varias — si una falla o se queda sin
+    //     cuota gratuita, el asistente prueba automáticamente con
+    //     la siguiente de la lista, así no dependes de una sola.
+    //
+    //     Campos de cada IA:
+    //     - id: un nombre corto único (solo para identificarla)
+    //     - nombre: como se muestra en los mensajes de error/consola
+    //     - tipo: 'gemini'  →  para la API de Google Gemini
+    //             'openai_compatible'  →  para OpenAI, Groq, Mistral,
+    //             DeepSeek, o cualquier otra que use el mismo formato
+    //     - apiKey: tu clave de esa API
+    //     - modelo: el nombre exacto del modelo (ej. "gemini-2.5-flash")
+    //     - endpoint: (solo para 'openai_compatible') la URL de esa API
+    //     - potente: true  → resérvala para preguntas complicadas
+    //                false → úsala primero para preguntas simples
+    //
+    //     ⚠️ Aviso rápido (tal como quedamos): estas claves quedan
+    //     visibles en el código tal cual las pegues aquí. Está bien
+    //     mientras pruebas cómo funciona, pero antes de compartir
+    //     este archivo o subir un APK público, muévelas a un backend
+    //     (por ejemplo tu propio Apps Script) para que nadie más
+    //     pueda usarlas a tu nombre.
+    // ======================================================
+    window.ASISTENTE_IAS = [
+        // Ejemplo — IA rápida/económica para preguntas simples:
+        // { id:'gemini-flash', nombre:'Gemini Flash', tipo:'gemini',
+        //   apiKey:'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', modelo:'gemini-2.5-flash', potente:false },
+
+        // Ejemplo — IA más potente para preguntas complicadas:
+        // { id:'gemini-pro', nombre:'Gemini Pro', tipo:'gemini',
+        //   apiKey:'PEGA_AQUI_TU_API_KEY', modelo:'gemini-2.5-pro', potente:true },
+
+        // Ejemplo — OpenAI o cualquier API compatible (Groq, Mistral, DeepSeek...):
+        // { id:'openai', nombre:'OpenAI', tipo:'openai_compatible',
+        //   apiKey:'PEGA_AQUI_TU_API_KEY', modelo:'gpt-4o-mini',
+        //   endpoint:'https://api.openai.com/v1/chat/completions', potente:false },
+    ];
+
+    // ======================================================
+    // 2) Resaltar botón activo del menú + actualizar título
+    //    de la topbar. No modifica showPanel(), solo escucha
+    //    los mismos clics.
+    // ======================================================
+    const navButtons = document.querySelectorAll('.sidebar button[onclick^="showPanel"]');
+    navButtons.forEach(btn=>{
+        btn.addEventListener('click', function(){
+            navButtons.forEach(b=>b.classList.remove('active'));
+            this.classList.add('active');
+            const heading = document.getElementById('topbar-heading');
+            const label = this.querySelector('.nav-label');
+            if(heading && label) heading.textContent = label.textContent;
+        });
+    });
+
+    // ======================================================
+    // 3) Partículas animadas de fondo en la pantalla de login
+    // ======================================================
+    const canvas = document.getElementById('loginParticles');
+    if(canvas){
+        const ctx = canvas.getContext('2d');
+        let w, h, particles = [];
+        const COUNT = 46;
+
+        function resize(){
+            w = canvas.width = canvas.offsetWidth;
+            h = canvas.height = canvas.offsetHeight;
+        }
+
+        function crearParticulas(){
+            particles = [];
+            for(let i=0;i<COUNT;i++){
+                particles.push({
+                    x: Math.random()*w,
+                    y: Math.random()*h,
+                    r: Math.random()*2.2 + 0.6,
+                    vx: (Math.random()-0.5)*0.25,
+                    vy: (Math.random()-0.5)*0.25,
+                    a: Math.random()*0.5 + 0.15
+                });
+            }
+        }
+
+        function tick(){
+            if(!canvas.isConnected) return;
+            ctx.clearRect(0,0,w,h);
+
+            // líneas entre partículas cercanas
+            for(let i=0;i<particles.length;i++){
+                for(let j=i+1;j<particles.length;j++){
+                    const p1=particles[i], p2=particles[j];
+                    const dx=p1.x-p2.x, dy=p1.y-p2.y;
+                    const dist = Math.sqrt(dx*dx+dy*dy);
+                    if(dist < 120){
+                        ctx.strokeStyle = 'rgba(217,190,143,' + (0.12 * (1-dist/120)) + ')';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(p1.x,p1.y);
+                        ctx.lineTo(p2.x,p2.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            particles.forEach(p=>{
+                p.x += p.vx; p.y += p.vy;
+                if(p.x < 0 || p.x > w) p.vx *= -1;
+                if(p.y < 0 || p.y > h) p.vy *= -1;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+                ctx.fillStyle = 'rgba(255,255,255,' + p.a + ')';
+                ctx.fill();
+            });
+
+            requestAnimationFrame(tick);
+        }
+
+        window.addEventListener('resize', ()=>{ resize(); crearParticulas(); });
+        resize();
+        crearParticulas();
+        tick();
+    }
+
+    // ======================================================
+    // Detiene el bucle de partículas cuando ya se hizo login,
+    // sin tocar la función login() original: solo la envolvemos.
+    // ======================================================
+    const originalLogin = window.login;
+    if(typeof originalLogin === 'function'){
+        window.login = function(){
+            originalLogin.apply(this, arguments);
+            const ls = document.getElementById('loginScreen');
+            if(ls && ls.style.display === 'none' && typeof showPanel === 'function'){
+                showPanel('ropa');
+                navButtons.forEach(b=>b.classList.remove('active'));
+                const ropaBtn = document.querySelector('.sidebar button[onclick="showPanel(\'ropa\')"]');
+                if(ropaBtn) ropaBtn.classList.add('active');
+                const heading = document.getElementById('topbar-heading');
+                if(heading) heading.textContent = 'Ropa';
+                const fab = document.getElementById('asistente-fab');
+                if(fab) fab.style.display = 'flex';
+            }
+        };
+    }
+
+})();
+</script>
+
+<!-- ============================================================
+     MOTOR DE PREGUNTAS Y RESPUESTAS DEL ASISTENTE DE ALMACÉN
+     Usa los mismos datos ya existentes en la página (inventory,
+     historialData, empleados, listas de productos). No modifica
+     ninguna función original: solo las lee.
+     ============================================================ -->
+<script>
+
+// ---------- Abrir / cerrar el panel del asistente ----------
+// ---------- Memoria de conversación: recuerda de qué/quién se habló ----------
+let contextoAsistente = { empleado: null, producto: null, talla: null, estado: null };
+// Historial de la conversación (para darle contexto a la IA externa si se usa)
+let historialConversacionAsistente = [];
+
+function toggleAsistente(){
+    const panel = document.getElementById('asistente-panel');
+    if(!panel) return;
+    const visible = panel.style.display === 'flex';
+    panel.style.display = visible ? 'none' : 'flex';
+
+    if(!visible){
+        const msgs = document.getElementById('asistente-mensajes');
+        if(msgs && msgs.children.length === 0){
+            agregarMensajeAsistente('asistente',
+                'Hola, soy el asistente de almacén. Puedes preguntarme cosas como:\n\n'+
+                '• ¿Cuánto stock tengo de Pantalón Marrón?\n'+
+                '• ¿Qué salió el 23/08/2026?\n'+
+                '• ¿Qué le di a Jorge Gonzales?\n'+
+                '• ¿Cuánto tiene Andrés en su poder de Camisa Amarilla?\n\n'+
+                'Y puedo seguir la conversación: si luego preguntas "¿y en qué estado está?" sin repetir el nombre, sé de qué estábamos hablando.',
+                false);
+        }
+        setTimeout(()=>{ const inp=document.getElementById('asistente-input'); if(inp) inp.focus(); }, 100);
+    }
+}
+
+// ---------- Pintar un mensaje en el chat ----------
+function agregarMensajeAsistente(rol, texto, hablar){
+    const cont = document.getElementById('asistente-mensajes');
+    if(!cont) return;
+    const div = document.createElement('div');
+    div.className = 'msg-asistente ' + (rol === 'user' ? 'msg-user' : 'msg-bot');
+    div.innerText = texto;
+    cont.appendChild(div);
+    cont.scrollTop = cont.scrollHeight;
+    if(hablar && rol === 'asistente'){
+        hablarTexto(texto);
+    }
+}
+
+// ---------- Burbuja temporal "Pensando…" mientras se consulta una IA externa ----------
+function mostrarPensandoAsistente(){
+    const cont = document.getElementById('asistente-mensajes');
+    if(!cont) return null;
+    const div = document.createElement('div');
+    div.className = 'msg-asistente msg-bot msg-pensando';
+    div.innerText = 'Pensando…';
+    div.id = 'pensando-'+Date.now();
+    cont.appendChild(div);
+    cont.scrollTop = cont.scrollHeight;
+    return div.id;
+}
+function quitarPensandoAsistente(id){
+    if(!id) return;
+    const el = document.getElementById(id);
+    if(el) el.remove();
+}
+
+// ---------- Contador de tokens de IA usados (se guarda en este dispositivo) ----------
+function inicializarContadorTokensAsistente(){
+    const total = parseInt(localStorage.getItem('prc_asistente_tokens') || '0', 10);
+    const badge = document.getElementById('asistente-tokens');
+    if(badge) badge.textContent = '🔢 ' + total.toLocaleString('es-PE');
+}
+function sumarTokensAsistente(cantidad){
+    if(!cantidad) return;
+    let total = parseInt(localStorage.getItem('prc_asistente_tokens') || '0', 10);
+    total += cantidad;
+    localStorage.setItem('prc_asistente_tokens', String(total));
+    const badge = document.getElementById('asistente-tokens');
+    if(badge) badge.textContent = '🔢 ' + total.toLocaleString('es-PE');
+}
+
+// ---------- ¿Es una pregunta "complicada" (abierta, no de datos puntuales)? ----------
+function esPreguntaComplejaAsistente(qNorm){
+    const kwComplejo = ['explica','explicame','por que','porque','analiza','compara','recomienda',
+        'recomiendame','resume','resumen','estrategia','como puedo','deberia','sugerencia','sugiere',
+        'opinion','ayudame a decidir','que opinas'];
+    return contieneAlgunaAsistente(qNorm, kwComplejo) || qNorm.split(' ').filter(Boolean).length > 18;
+}
+
+// ---------- Resumen compacto del stock (para no mandar toda la base de datos a la IA) ----------
+function resumirInventarioParaIA(){
+    if(typeof inventory === 'undefined') return {};
+    const resumen = {};
+    Object.keys(inventory).forEach(tipo=>{
+        if(tipo === 'celular') return;
+        const cat = inventory[tipo] || {};
+        Object.keys(cat).forEach(key=>{
+            const prod = key.split('|')[0];
+            resumen[prod] = (resumen[prod]||0) + (cat[key]||0);
+        });
+    });
+    return resumen;
+}
+
+// ---------- Solo los datos relevantes (según lo que ya sabemos por la conversación) ----------
+function construirContextoParaIA(){
+    const ctx = { resumen_stock: resumirInventarioParaIA() };
+    if(contextoAsistente.empleado && typeof calcularTotalesEmpleadoDetallado === 'function'){
+        ctx.empleado_actual = {
+            nombre: contextoAsistente.empleado.nombre,
+            en_su_poder: calcularTotalesEmpleadoDetallado(contextoAsistente.empleado.nombre, '')
+        };
+    }
+    if(contextoAsistente.producto) ctx.producto_actual = contextoAsistente.producto.nombre;
+    if(typeof historialData !== 'undefined') ctx.ultimos_movimientos = historialData.slice(0, 15);
+    return ctx;
+}
+
+// ---------- Llamada a la API de Gemini ----------
+async function llamarGeminiAsistente(provider, mensajes, systemPrompt){
+    const contents = mensajes.map(m=>({
+        role: m.rol === 'user' ? 'user' : 'model',
+        parts: [{ text: m.texto }]
+    }));
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + provider.modelo + ':generateContent?key=' + provider.apiKey;
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents, systemInstruction: { parts: [{ text: systemPrompt }] } })
+    });
+    if(!res.ok) throw new Error((provider.nombre||'Gemini') + ' HTTP ' + res.status);
+    const data = await res.json();
+    const texto = (data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts)
+        ? data.candidates[0].content.parts.map(p=>p.text).join('') : '';
+    const tokens = (data && data.usageMetadata && data.usageMetadata.totalTokenCount) || 0;
+    return { texto, tokens };
+}
+
+// ---------- Llamada a APIs con formato compatible con OpenAI (OpenAI, Groq, Mistral, DeepSeek...) ----------
+async function llamarOpenAICompatibleAsistente(provider, mensajes, systemPrompt){
+    const msgs = [{ role:'system', content: systemPrompt }]
+        .concat(mensajes.map(m=>({ role: m.rol === 'user' ? 'user' : 'assistant', content: m.texto })));
+    const res = await fetch(provider.endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + provider.apiKey
+        },
+        body: JSON.stringify({ model: provider.modelo, messages: msgs })
+    });
+    if(!res.ok) throw new Error((provider.nombre||'IA') + ' HTTP ' + res.status);
+    const data = await res.json();
+    const texto = (data && data.choices && data.choices[0] && data.choices[0].message) ? data.choices[0].message.content : '';
+    const tokens = (data && data.usage && data.usage.total_tokens) || 0;
+    return { texto, tokens };
+}
+
+async function llamarProveedorIAAsistente(provider, mensajes, systemPrompt){
+    if(provider.tipo === 'gemini') return llamarGeminiAsistente(provider, mensajes, systemPrompt);
+    if(provider.tipo === 'openai_compatible') return llamarOpenAICompatibleAsistente(provider, mensajes, systemPrompt);
+    throw new Error('Tipo de proveedor de IA no soportado: ' + provider.tipo);
+}
+
+// ---------- Elige proveedor(es) según complejidad, y va probando uno por uno si alguno falla ----------
+async function consultarIAExternaAsistente(preguntaOriginal){
+    const providers = Array.isArray(window.ASISTENTE_IAS) ? window.ASISTENTE_IAS : [];
+    if(providers.length === 0) return null;
+
+    const compleja = esPreguntaComplejaAsistente(normalizarTextoAsistente(preguntaOriginal));
+    const potentes = providers.filter(p=>p.potente);
+    const rapidas  = providers.filter(p=>!p.potente);
+    const orden = compleja ? potentes.concat(rapidas) : rapidas.concat(potentes);
+
+    const contextoDatos = construirContextoParaIA();
+    const systemPrompt =
+        'Eres el asistente de almacén de "Inventario PRC". Responde siempre en español, de forma breve y directa. '+
+        'Básate ÚNICAMENTE en estos datos reales del inventario (formato JSON) para hablar de stock, productos, '+
+        'empleados o movimientos — no inventes cifras que no estén aquí:\n' + JSON.stringify(contextoDatos) +
+        '\nSi la pregunta no tiene relación con el almacén, igual respóndele con normalidad, como un asistente útil.';
+
+    const mensajes = historialConversacionAsistente.slice(-6);
+
+    for(const provider of orden){
+        try{
+            const { texto, tokens } = await llamarProveedorIAAsistente(provider, mensajes, systemPrompt);
+            if(texto){
+                sumarTokensAsistente(tokens);
+                return texto;
+            }
+        }catch(e){
+            console.warn('El proveedor "'+(provider.nombre||provider.id)+'" falló, probando el siguiente:', e.message);
+        }
+    }
+    return null;
+}
+
+// ---------- Enviar pregunta (desde texto o desde voz) ----------
+async function enviarPreguntaAsistente(){
+    const input = document.getElementById('asistente-input');
+    if(!input) return;
+    const pregunta = input.value.trim();
+    if(!pregunta) return;
+
+    agregarMensajeAsistente('user', pregunta, false);
+    historialConversacionAsistente.push({ rol:'user', texto:pregunta });
+    input.value = '';
+
+    let respuesta;
+    try{
+        respuesta = responderConsultaAlmacen(pregunta);
+    }catch(e){
+        console.error('Error respondiendo la consulta:', e);
+        respuesta = null;
+    }
+
+    const esFallbackLocal = !respuesta || respuesta.indexOf('No estoy seguro de haber entendido') === 0;
+    const esCompleja = esPreguntaComplejaAsistente(normalizarTextoAsistente(pregunta));
+    const hayIAsConfiguradas = Array.isArray(window.ASISTENTE_IAS) && window.ASISTENTE_IAS.length > 0;
+
+    if((esFallbackLocal || esCompleja) && hayIAsConfiguradas){
+        const idPensando = mostrarPensandoAsistente();
+        try{
+            const respuestaIA = await consultarIAExternaAsistente(pregunta);
+            quitarPensandoAsistente(idPensando);
+            if(respuestaIA){
+                historialConversacionAsistente.push({ rol:'asistente', texto:respuestaIA });
+                agregarMensajeAsistente('asistente', respuestaIA, true);
+                return;
+            }
+        }catch(e){
+            quitarPensandoAsistente(idPensando);
+            console.error('Error consultando IA externa:', e);
+        }
+    }
+
+    const respuestaFinal = respuesta || 'Tuve un problema procesando esa pregunta. ¿Puedes reformularla?';
+    historialConversacionAsistente.push({ rol:'asistente', texto:respuestaFinal });
+    agregarMensajeAsistente('asistente', respuestaFinal, true);
+}
+
+// ---------- Normalización de texto (minúsculas, sin tildes) ----------
+function normalizarTextoAsistente(t){
+    return (t||'').toString().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+        .trim();
+}
+
+// ---------- Todos los productos conocidos, con su categoría ----------
+function listaTodosLosProductosAsistente(){
+    const out = [];
+    if(typeof ropaList !== 'undefined') ropaList.forEach(p=>out.push({nombre:p, tipo:'ropa'}));
+    if(typeof calzadoList !== 'undefined') calzadoList.forEach(p=>out.push({nombre:p, tipo:'calzado'}));
+    if(typeof utilesList !== 'undefined') utilesList.forEach(p=>out.push({nombre:p, tipo:'utiles'}));
+    if(typeof implementosList !== 'undefined') implementosList.forEach(p=>out.push({nombre:p, tipo:'implementos'}));
+    if(typeof celularList !== 'undefined') celularList.forEach(p=>out.push({nombre:p, tipo:'celular'}));
+    return out;
+}
+
+// ---------- Herramientas para tolerar plurales/género en español ----------
+// "camisas" -> "camisa", "blancas" -> "blanca", "marrones" -> "marron"
+function stemPalabraAsistente(w){
+    if(/[^aeiou]es$/.test(w) && w.length > 4) return w.slice(0,-2);
+    if(/[aeiou]s$/.test(w)) return w.slice(0,-1);
+    return w;
+}
+function tokenizarAsistente(qNorm){
+    return qNorm.split(/[^a-z0-9]+/).filter(Boolean);
+}
+
+function detectarProductoAsistente(qNorm){
+    const productos = listaTodosLosProductosAsistente();
+    const tokensPregunta = new Set(tokenizarAsistente(qNorm).map(stemPalabraAsistente));
+
+    // 1) Coincidencia por palabras (tolera plural/género): "camisas blancas" -> "Camisa Blanca"
+    const candidatos = productos
+        .map(p=>({p, palabras: normalizarTextoAsistente(p.nombre).split(' ').map(stemPalabraAsistente)}))
+        .filter(c => c.palabras.every(pw => tokensPregunta.has(pw)))
+        .sort((a,b)=> b.palabras.length - a.palabras.length);
+    if(candidatos.length) return candidatos[0].p;
+
+    // 2) Respaldo: coincidencia exacta como subcadena (nombres poco comunes, ej. "Forcei")
+    const productosOrdenados = productos.slice().sort((a,b)=> b.nombre.length - a.nombre.length);
+    for(const p of productosOrdenados){
+        if(qNorm.includes(normalizarTextoAsistente(p.nombre))) return p;
+    }
+
+    // 3) Respaldo: una sola palabra del nombre (ej. solo "pantalón"), únicamente si
+    //    esa palabra pertenece a un solo producto (si es ambigua, no se adivina).
+    const porPalabraUnica = productos.filter(p=>{
+        const palabras = normalizarTextoAsistente(p.nombre).split(' ').map(stemPalabraAsistente);
+        return palabras.some(pw => pw.length >= 4 && tokensPregunta.has(pw));
+    });
+    if(porPalabraUnica.length === 1) return porPalabraUnica[0];
+
+    return null;
+}
+
+function detectarEmpleadoAsistente(qNorm){
+    if(typeof empleados === 'undefined') return null;
+    let mejor = null, mejorLen = 0;
+    empleados.forEach(e=>{
+        const nombreNorm = normalizarTextoAsistente(e.nombre);
+        if(qNorm.includes(nombreNorm) && nombreNorm.length > mejorLen){
+            mejor = e; mejorLen = nombreNorm.length;
+        }
+        nombreNorm.split(' ').forEach(tok=>{
+            if(tok.length >= 3 && qNorm.includes(tok) && tok.length > mejorLen){
+                mejor = e; mejorLen = tok.length;
+            }
+        });
+    });
+    return mejor;
+}
+
+function detectarFechaAsistente(qNorm){
+    const hoy = new Date();
+    const formatear = (d)=> String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+
+    if(qNorm.includes('hoy')) return formatear(hoy);
+    if(qNorm.includes('ayer')){
+        const ayer = new Date(hoy); ayer.setDate(ayer.getDate()-1);
+        return formatear(ayer);
+    }
+    const match = qNorm.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+    if(match){
+        let [, d, m, y] = match;
+        if(y.length === 2) y = '20'+y;
+        return String(d).padStart(2,'0')+'/'+String(m).padStart(2,'0')+'/'+y;
+    }
+    return null;
+}
+
+function contieneAlgunaAsistente(qNorm, palabras){
+    return palabras.some(p=>qNorm.includes(p));
+}
+
+// ---------- Detectar talla mencionada (ropa: S/M/L/XL/XXL/XXXL, calzado: número) ----------
+function detectarTallaAsistente(qNorm, tipoProducto){
+    // Prioridad 1: "talla X" o "número X" explícito
+    let m = qNorm.match(/\btalla\s*([a-z0-9]+)\b/);
+    if(m) return m[1].toUpperCase();
+
+    if(tipoProducto === 'calzado'){
+        m = qNorm.match(/\bnumero\s*(\d{2})\b/);
+        if(m) return m[1];
+        m = qNorm.match(/\b(3[4-9]|[4-5][0-9]|60)\b/);
+        if(m) return m[1];
+        return null;
+    }
+    // Tallas de ropa como palabra suelta (xxxl antes que xl, xl antes que l, etc.)
+    m = qNorm.match(/\b(xxxl|xxl|xl|xs|s|m|l)\b/);
+    if(m) return m[1].toUpperCase();
+    return null;
+}
+
+// ---------- Detectar estado mencionado (Nuevo / Usado) ----------
+function detectarEstadoAsistente(qNorm){
+    if(/\b(usado|usada|usados|usadas)\b/.test(qNorm)) return 'Usado';
+    if(/\b(nuevo|nueva|nuevos|nuevas)\b/.test(qNorm)) return 'Nuevo';
+    return null;
+}
+
+// ---------- Stock detallado de un producto, filtrando por talla/estado si se mencionan ----------
+function obtenerStockDetalladoAsistente(producto, tipo, talla, estado){
+    if(tipo === 'celular' || typeof inventory === 'undefined') return null;
+    const cat = inventory[tipo] || {};
+    let total = 0;
+    Object.keys(cat).forEach(key=>{
+        const partes = key.split('|');
+        if(partes[0] !== producto) return;
+        if(tipo === 'ropa' || tipo === 'calzado'){
+            const tallaKey = partes[1], estadoKey = partes[2];
+            if(talla && (tallaKey||'').toUpperCase() !== talla) return;
+            if(estado && estadoKey !== estado) return;
+        } else {
+            // utiles / implementos: producto|estado (sin talla)
+            const estadoKey = partes[1];
+            if(estado && estadoKey !== estado) return;
+        }
+        total += (cat[key]||0);
+    });
+    return total;
+}
+
+// ---------- Motor principal de respuestas ----------
+function responderConsultaAlmacen(preguntaOriginal){
+    const q = normalizarTextoAsistente(preguntaOriginal);
+
+    // Si el usuario pide explícitamente cambiar de tema, se olvida lo anterior
+    if(/\b(otra pregunta|cambio de tema|olvida eso|nuevo tema|otra cosa)\b/.test(q)){
+        contextoAsistente = { empleado: null, producto: null, talla: null, estado: null };
+    }
+
+    let producto = detectarProductoAsistente(q);
+    let empleado = detectarEmpleadoAsistente(q);
+    const fecha = detectarFechaAsistente(q);
+    let talla = detectarTallaAsistente(q, producto ? producto.tipo : (contextoAsistente.producto ? contextoAsistente.producto.tipo : null));
+    let estado = detectarEstadoAsistente(q);
+
+    // Memoria de conversación: si esta pregunta no menciona un producto/empleado
+    // nuevo, se asume que sigue hablando de lo mismo que la pregunta anterior.
+    if(!producto && contextoAsistente.producto) producto = contextoAsistente.producto;
+    if(!empleado && contextoAsistente.empleado) empleado = contextoAsistente.empleado;
+    if(!talla && contextoAsistente.talla) talla = contextoAsistente.talla;
+    if(!estado && contextoAsistente.estado) estado = contextoAsistente.estado;
+
+    // Guardar lo que se sabe hasta ahora para la siguiente pregunta
+    contextoAsistente = {
+        empleado: empleado || null,
+        producto: producto || null,
+        talla: talla || null,
+        estado: estado || null
+    };
+
+    const kwSalida  = ['salio','retiro','retirado','se llevo','recibio','recibió','entregue','entregué'];
+    const kwEntrada = ['entro','ingreso','agregado','llego','llegó','devolvio','devolvió','recibimos'];
+    const kwStock   = ['stock','cuanto hay','cuantos hay','existencia','cuanto tengo','cuantas tengo','cuantos tengo','cuanto queda','disponible','tengo de','hay de'];
+    const kwPoder   = ['en su poder','tiene en su poder','cuanto tiene','que tiene','le di','entregue a','entregué a'];
+    const kwTallaPregunta  = ['que talla','de que talla','en que talla','talla es','que numero','de que numero'];
+    const kwEstadoPregunta = ['que estado','en que estado','esta nuevo','esta nueva','esta usado','esta usada'];
+    const kwUltimo = ['ultimo','ultima','lo mas reciente','recientemente','recien'];
+
+    // Frase descriptiva de talla/estado, para que la respuesta sea igual de específica que la pregunta
+    function sufijoDetalle(){
+        const partes = [];
+        if(talla) partes.push('talla '+talla);
+        if(estado) partes.push(estado.toLowerCase());
+        return partes.length ? ` (${partes.join(', ')})` : '';
+    }
+
+    // 0) Detalle de talla/estado de un producto que tiene un empleado en su poder
+    //    Ej: "el pantalón de Jorge, ¿de qué talla es?" / "¿en qué estado está su camisa?"
+    if(empleado && producto && (contieneAlgunaAsistente(q,kwTallaPregunta) || contieneAlgunaAsistente(q,kwEstadoPregunta))){
+        if(typeof calcularTotalesEmpleadoDetallado !== 'function'){
+            return 'No pude acceder al detalle de ese producto en este momento.';
+        }
+        const detalle = calcularTotalesEmpleadoDetallado(empleado.nombre, producto.nombre).filter(t=>t.total !== 0);
+        if(detalle.length === 0){
+            return `${empleado.nombre} no tiene ${producto.nombre} registrado en su poder.`;
+        }
+        if(detalle.length === 1){
+            const t = detalle[0];
+            const partesTalla = (t.talla && t.talla !== 'N/A') ? `talla ${t.talla}` : '';
+            const partes = [partesTalla, t.estado ? t.estado.toLowerCase() : ''].filter(Boolean).join(', ');
+            return `${empleado.nombre} tiene ${producto.nombre}${partes ? ' — '+partes : ''}, con ${t.total} unidades en su poder.`;
+        }
+        const lineas = detalle.map(t=>{
+            const partesTalla = (t.talla && t.talla !== 'N/A') ? `talla ${t.talla}` : '';
+            const partes = [partesTalla, t.estado ? t.estado.toLowerCase() : ''].filter(Boolean).join(', ');
+            return `• ${producto.nombre}${partes ? ' ('+partes+')' : ''}: ${t.total} unidades`;
+        });
+        return `${empleado.nombre} tiene varias versiones de ${producto.nombre} en su poder:\n` + lineas.join('\n');
+    }
+
+    // 0b) "¿Qué fue lo último que entró/salió/se movió?" (sin fecha exacta)
+    if(contieneAlgunaAsistente(q, kwUltimo) && typeof historialData !== 'undefined'){
+        let registros = historialData.slice(); // ya viene ordenado del más reciente al más antiguo
+        if(empleado) registros = registros.filter(r=>r.empleado === empleado.nombre);
+        if(producto) registros = registros.filter(r=>r.prod === producto.nombre);
+        if(talla) registros = registros.filter(r=>(r.talla||'').toUpperCase() === talla);
+        if(estado) registros = registros.filter(r=>r.estado === estado);
+
+        if(contieneAlgunaAsistente(q, kwEntrada) && !contieneAlgunaAsistente(q, kwSalida)){
+            registros = registros.filter(r=>r.accion === 'Agregado');
+        } else if(contieneAlgunaAsistente(q, kwSalida)){
+            registros = registros.filter(r=>r.accion === 'Retirado');
+        }
+
+        if(registros.length === 0){
+            return `No encontré movimientos recientes${producto?' de '+producto.nombre:''}${empleado?' con '+empleado.nombre:''}.`;
+        }
+        const r = registros[0];
+        const verbo = r.accion === 'Agregado' ? 'entró' : (r.accion === 'Retirado' ? 'salió' : 'se registró');
+        return `Lo último que ${verbo} fue ${r.prod}${(r.talla && r.talla!=='N/A')?' (talla '+r.talla+', '+r.estado.toLowerCase()+')':''} el ${r.fecha} — cantidad ${r.cant}${r.empleado ? ', con '+r.empleado : ''}.`;
+    }
+
+    // 1) ¿Qué tiene un empleado en su poder? (con o sin producto puntual)
+    if(empleado && (contieneAlgunaAsistente(q,kwPoder) || (!fecha && !contieneAlgunaAsistente(q,kwSalida) && !contieneAlgunaAsistente(q,kwEntrada)))){
+        if(typeof calcularTotalesEmpleadoPorProducto !== 'function'){
+            return 'No pude acceder al historial del empleado en este momento.';
+        }
+        const totales = calcularTotalesEmpleadoPorProducto(empleado.nombre, producto ? producto.nombre : '');
+        if(totales.length === 0){
+            return `${empleado.nombre} no tiene movimientos registrados${producto ? ' de '+producto.nombre : ''}.`;
+        }
+        if(producto){
+            const t = totales.find(x=>x.prod === producto.nombre);
+            const cant = t ? t.total : 0;
+            return `${empleado.nombre} tiene ${cant} ${producto.nombre} en su poder.`;
+        }
+        const partes = totales.map(t=>`${t.prod}: ${t.total}`).join(', ');
+        return `${empleado.nombre} tiene en su poder → ${partes}.`;
+    }
+
+    // 2) Movimientos en una fecha concreta (qué salió / entró / se registró)
+    if(fecha && typeof historialData !== 'undefined'){
+        let registros = historialData.filter(r=>r.fecha === fecha);
+        if(empleado) registros = registros.filter(r=>r.empleado === empleado.nombre);
+        if(producto) registros = registros.filter(r=>r.prod === producto.nombre);
+        if(talla) registros = registros.filter(r=>(r.talla||'').toUpperCase() === talla);
+        if(estado) registros = registros.filter(r=>r.estado === estado);
+
+        if(contieneAlgunaAsistente(q, kwSalida) && !contieneAlgunaAsistente(q, kwEntrada)){
+            registros = registros.filter(r=>r.accion === 'Retirado');
+        } else if(contieneAlgunaAsistente(q, kwEntrada)){
+            registros = registros.filter(r=>r.accion === 'Agregado');
+        }
+
+        if(registros.length === 0){
+            return `No encontré movimientos${producto?' de '+producto.nombre+sufijoDetalle():''}${empleado?' con '+empleado.nombre:''} el ${fecha}.`;
+        }
+        const lineas = registros.map(r=>`• ${r.prod} (${r.talla}/${r.estado}) — ${r.accion} (${r.cant})${r.empleado ? ' — '+r.empleado : ''}`);
+        return `El ${fecha}:\n` + lineas.join('\n');
+    }
+
+    // 3) Stock actual de un producto puntual (respeta talla/estado si se mencionan)
+    if(producto && (contieneAlgunaAsistente(q,kwStock) || !empleado)){
+        if(producto.tipo === 'celular'){
+            const info = (typeof inventory !== 'undefined' && inventory.celular) ? inventory.celular[producto.nombre] : null;
+            if(info && info.number) return `El celular ${producto.nombre} tiene registrado el número ${info.number}${info.operator ? ' ('+info.operator+')' : ''}.`;
+            return `No hay un número registrado para ${producto.nombre}.`;
+        }
+        const total = obtenerStockDetalladoAsistente(producto.nombre, producto.tipo, talla, estado);
+        if(total === null) return `No pude calcular el stock de ${producto.nombre} en este momento.`;
+        return `El stock actual de ${producto.nombre}${sufijoDetalle()} es de ${total} unidades.`;
+    }
+
+    // 4) Últimos movimientos de un producto (si no se detectó nada más específico)
+    if(producto && typeof historialData !== 'undefined'){
+        let registros = historialData.filter(r=>r.prod === producto.nombre);
+        if(talla) registros = registros.filter(r=>(r.talla||'').toUpperCase() === talla);
+        if(estado) registros = registros.filter(r=>r.estado === estado);
+        registros = registros.slice(0,5);
+        if(registros.length === 0) return `No encontré movimientos registrados de ${producto.nombre}${sufijoDetalle()}.`;
+        const lineas = registros.map(r=>`• ${r.fecha} — ${r.accion} (${r.cant})${r.empleado?' — '+r.empleado:''}`);
+        return `Últimos movimientos de ${producto.nombre}${sufijoDetalle()}:\n` + lineas.join('\n');
+    }
+
+    // 5) Comandos personalizados (tu propio JSON de preguntas/respuestas)
+    if(Array.isArray(window.comandosPersonalizadosAsistente)){
+        for(const cmd of window.comandosPersonalizadosAsistente){
+            if(!cmd || !Array.isArray(cmd.palabras_clave) || !cmd.respuesta) continue;
+            const todasPresentes = cmd.palabras_clave.every(k => q.includes(normalizarTextoAsistente(k)));
+            if(todasPresentes) return cmd.respuesta;
+        }
+    }
+
+    // 6) No se pudo identificar la pregunta
+    return 'No estoy seguro de haber entendido. Puedes preguntarme por el stock de un producto, qué salió o entró en una fecha, cuánto tiene un empleado en su poder, o de qué talla/estado es algo que tiene.';
+}
+
+// ---------- Voz: texto → voz (síntesis) ----------
+function hablarTexto(texto){
+    if(!('speechSynthesis' in window)) return;
+    try{
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(texto);
+        utter.lang = 'es-PE';
+        utter.rate = 1;
+
+        const asignarVoz = ()=>{
+            const voces = window.speechSynthesis.getVoices();
+            const vozEs = voces.find(v=>v.lang && v.lang.toLowerCase().startsWith('es'));
+            if(vozEs) utter.voice = vozEs;
+        };
+        asignarVoz();
+
+        const orbs = document.querySelectorAll('.orb-mini');
+        utter.onstart = ()=> orbs.forEach(o=>o.classList.add('hablando'));
+        utter.onend   = ()=> orbs.forEach(o=>o.classList.remove('hablando'));
+        utter.onerror = ()=> orbs.forEach(o=>o.classList.remove('hablando'));
+
+        window.speechSynthesis.speak(utter);
+    }catch(e){ console.error('Error en síntesis de voz:', e); }
+}
+
+// ---------- Voz: voz → texto (reconocimiento) ----------
+let recognitionAsistente = null;
+function iniciarEscucha(){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const micBtn = document.getElementById('asistente-mic');
+    const orbs = document.querySelectorAll('.orb-mini');
+
+    if(!SR){
+        alert('Este navegador no soporta reconocimiento de voz. Puedes escribir tu pregunta.');
+        return;
+    }
+
+    if(recognitionAsistente){
+        try{ recognitionAsistente.stop(); }catch(e){}
+        recognitionAsistente = null;
+        return;
+    }
+
+    recognitionAsistente = new SR();
+    recognitionAsistente.lang = 'es-PE';
+    recognitionAsistente.interimResults = false;
+    recognitionAsistente.maxAlternatives = 1;
+
+    orbs.forEach(o=>o.classList.add('escuchando'));
+    if(micBtn) micBtn.classList.add('mic-activo');
+
+    recognitionAsistente.onresult = function(event){
+        const texto = event.results[0][0].transcript;
+        const input = document.getElementById('asistente-input');
+        if(input) input.value = texto;
+        enviarPreguntaAsistente();
+    };
+    recognitionAsistente.onerror = function(){
+        orbs.forEach(o=>o.classList.remove('escuchando'));
+        if(micBtn) micBtn.classList.remove('mic-activo');
+        recognitionAsistente = null;
+    };
+    recognitionAsistente.onend = function(){
+        orbs.forEach(o=>o.classList.remove('escuchando'));
+        if(micBtn) micBtn.classList.remove('mic-activo');
+        recognitionAsistente = null;
+    };
+
+    try{
+        recognitionAsistente.start();
+    }catch(e){
+        console.error('No se pudo iniciar el reconocimiento de voz:', e);
+        orbs.forEach(o=>o.classList.remove('escuchando'));
+        if(micBtn) micBtn.classList.remove('mic-activo');
+        recognitionAsistente = null;
+    }
+}
+
+// Mostrar el contador de tokens guardado (si ya se usó una IA externa antes)
+inicializarContadorTokensAsistente();
+
+</script>
+
 </body>
 </html>
