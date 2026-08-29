@@ -2518,17 +2518,26 @@ function descargarPDFComoDataUri(pdf, nombreArchivo){
     //     pueda usarlas a tu nombre.
     // ======================================================
     window.ASISTENTE_IAS = [
-        // Ejemplo — IA rápida/económica para preguntas simples:
+        // Tu IA activa: pasa por tu intermediario de Apps Script (evita el
+        // bloqueo de CORS de OpenAI y esconde tu clave del navegador).
+        // Pega aquí la URL que Apps Script te dio al implementar (termina en /exec):
+        { id:'apps-script-openai', nombre:'Asistente (Apps Script + OpenAI)', tipo:'apps_script',
+          endpoint:'https://script.google.com/macros/s/AKfycbxJWsuGE83aNK8FR_LrEsx5GJQwF1uFiMLrjuUDWaQxnmdeRbrvwzMvEsg4DtWjQbHKIQ/exec', potente:false },
+
+        // Respaldo: Gemini directo desde el navegador — Google está en medio de un
+        // cambio de formato de claves (ver conversación), puede fallar por ahora.
         // { id:'gemini-flash', nombre:'Gemini Flash', tipo:'gemini',
-        //   apiKey:'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', modelo:'gemini-2.5-flash', potente:false },
+        //   apiKey:'PEGA_AQUI_TU_API_KEY_DE_GEMINI', modelo:'gemini-2.5-flash', potente:false },
 
-        // Ejemplo — IA más potente para preguntas complicadas:
+        // Ejemplo — IA más potente para preguntas complicadas (misma clave sirve):
         // { id:'gemini-pro', nombre:'Gemini Pro', tipo:'gemini',
-        //   apiKey:'PEGA_AQUI_TU_API_KEY', modelo:'gemini-2.5-pro', potente:true },
+        //   apiKey:'PEGA_AQUI_TU_API_KEY_DE_GEMINI', modelo:'gemini-2.5-pro', potente:true },
 
-        // Ejemplo — OpenAI o cualquier API compatible (Groq, Mistral, DeepSeek...):
+        // Tu clave de OpenAI ya no hace falta aquí — ahora vive dentro de tu
+        // proyecto de Apps Script (AsistenteProxy.gs), no en este HTML.
         // { id:'openai', nombre:'OpenAI', tipo:'openai_compatible',
-        //   apiKey:'PEGA_AQUI_TU_API_KEY', modelo:'gpt-4o-mini',
+        //   apiKey:'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',
+        //   modelo:'gpt-4o-mini',
         //   endpoint:'https://api.openai.com/v1/chat/completions', potente:false },
     ];
 
@@ -2747,6 +2756,144 @@ function resumirInventarioParaIA(){
     return resumen;
 }
 
+// ---------- Texto legible del stock general del almacén (para el chat) ----------
+function resumenStockAlmacenTexto(){
+    const resumen = resumirInventarioParaIA();
+    const entradas = Object.entries(resumen).filter(([,cant])=>cant !== 0);
+    if(entradas.length === 0){
+        return 'Todavía no tengo productos registrados en el almacén.';
+    }
+    entradas.sort((a,b)=> b[1] - a[1]);
+    const totalUnidades = entradas.reduce((acc,[,cant])=>acc+cant, 0);
+    const lineas = entradas.map(([prod,cant])=>`• ${prod}: ${cant}`);
+    return `Actualmente tienes ${totalUnidades} unidades en total en tu almacén:\n` + lineas.join('\n');
+}
+
+// ---------- Stock de un producto puntual (independiente del contexto de empleado) ----------
+function responderStockProductoAsistente(producto, talla, estado){
+    if(producto.tipo === 'celular'){
+        const info = (typeof inventory !== 'undefined' && inventory.celular) ? inventory.celular[producto.nombre] : null;
+        if(info && info.number) return `El celular ${producto.nombre} tiene registrado el número ${info.number}${info.operator ? ' ('+info.operator+')' : ''}.`;
+        return `No hay un número registrado para ${producto.nombre}.`;
+    }
+    const total = obtenerStockDetalladoAsistente(producto.nombre, producto.tipo, talla, estado);
+    if(total === null) return `No pude calcular el stock de ${producto.nombre} en este momento.`;
+    const partes = [];
+    if(talla) partes.push('talla '+talla);
+    if(estado) partes.push(estado.toLowerCase());
+    const sufijo = partes.length ? ` (${partes.join(', ')})` : '';
+    return `El stock actual de ${producto.nombre}${sufijo} es de ${total} unidades.`;
+}
+
+// ---------- Ajusta este número si quieres que "poco stock" avise antes o después ----------
+const UMBRAL_STOCK_BAJO_ASISTENTE = 5;
+
+// ---------- Alerta de stock: productos agotados o con poco stock ----------
+function alertaStockAsistente(tipo){
+    const resumen = resumirInventarioParaIA();
+    const entradas = Object.entries(resumen);
+
+    if(tipo === 'agotado'){
+        const agotados = entradas.filter(([,cant])=> cant <= 0);
+        if(agotados.length === 0){
+            return 'No tienes productos agotados en tu almacén ahora mismo.';
+        }
+        const lineas = agotados.map(([prod,cant])=> cant < 0
+            ? `• ${prod} (${cant}, revisa ese registro, salió más de lo que entró)`
+            : `• ${prod}`
+        );
+        return 'Estos productos están agotados en tu almacén:\n' + lineas.join('\n');
+    }
+
+    if(tipo === 'bajo'){
+        const bajos = entradas.filter(([,cant])=> cant > 0 && cant <= UMBRAL_STOCK_BAJO_ASISTENTE);
+        if(bajos.length === 0){
+            return `No tienes productos con poco stock (umbral: ${UMBRAL_STOCK_BAJO_ASISTENTE} unidades o menos).`;
+        }
+        bajos.sort((a,b)=> a[1]-b[1]);
+        const lineas = bajos.map(([prod,cant])=> `• ${prod}: ${cant} unidades`);
+        return `Estos productos tienen poco stock (${UMBRAL_STOCK_BAJO_ASISTENTE} unidades o menos):\n` + lineas.join('\n');
+    }
+
+    return 'No pude calcular esa alerta de stock en este momento.';
+}
+
+// ---------- Historial cronológico de un empleado (no el total actual, sino cada movimiento) ----------
+function listarMovimientosEmpleadoAsistente(nombreEmpleado, filtroAccion, limite){
+    if(typeof historialData === 'undefined') return 'No tengo historial disponible en este momento.';
+
+    let registros = historialData.filter(r=>r.empleado === nombreEmpleado);
+    if(filtroAccion) registros = registros.filter(r=>r.accion === filtroAccion);
+
+    if(registros.length === 0){
+        const tipoTexto = filtroAccion === 'Retirado' ? 'entregas' : (filtroAccion === 'Agregado' ? 'devoluciones' : 'movimientos');
+        return `No encontré ${tipoTexto} registradas para ${nombreEmpleado}.`;
+    }
+
+    const tope = limite || 10;
+    const limitados = registros.slice(0, tope);
+    const lineas = limitados.map(r=>{
+        const accionTexto = r.accion === 'Retirado' ? 'Recibió' : (r.accion === 'Agregado' ? 'Devolvió' : r.accion);
+        const detalleTalla = (r.talla && r.talla !== 'N/A') ? ` (${r.talla}/${r.estado})` : '';
+        return `• ${r.fecha} — ${accionTexto} ${r.prod}${detalleTalla}, cantidad ${r.cant}`;
+    });
+
+    let titulo = `Historial de ${nombreEmpleado}`;
+    if(filtroAccion === 'Retirado') titulo = `Lo que le has entregado a ${nombreEmpleado}`;
+    else if(filtroAccion === 'Agregado') titulo = `Lo que ${nombreEmpleado} ha devuelto`;
+
+    let texto = titulo + ':\n' + lineas.join('\n');
+    if(registros.length > limitados.length){
+        texto += `\n… y ${registros.length - limitados.length} movimiento(s) más — revisa "Buscar Empleado" en el menú para verlos todos.`;
+    }
+    return texto;
+}
+
+// ---------- Detectar TODOS los productos mencionados (para comparaciones) ----------
+function detectarProductosMultiplesAsistente(qNorm){
+    const productos = listaTodosLosProductosAsistente();
+    const tokensPregunta = new Set(tokenizarAsistente(qNorm).map(stemPalabraAsistente));
+    return productos.filter(p=>{
+        const palabras = normalizarTextoAsistente(p.nombre).split(' ').map(stemPalabraAsistente);
+        return palabras.every(pw => tokensPregunta.has(pw));
+    });
+}
+
+// ---------- Detectar TODOS los empleados mencionados (para comparaciones) ----------
+function detectarEmpleadosMultiplesAsistente(qNorm){
+    if(typeof empleados === 'undefined') return [];
+    return empleados.filter(e=>{
+        const nombreNorm = normalizarTextoAsistente(e.nombre);
+        if(qNorm.includes(nombreNorm)) return true;
+        return nombreNorm.split(' ').some(tok => tok.length >= 3 && qNorm.includes(tok));
+    });
+}
+
+// ---------- Comparar el stock de varios productos ----------
+function compararProductosAsistente(productos){
+    const partes = productos.map(p=>({
+        nombre: p.nombre,
+        total: obtenerStockDetalladoAsistente(p.nombre, p.tipo, null, null) || 0
+    }));
+    partes.sort((a,b)=> b.total - a.total);
+    const lineas = partes.map(p=>`• ${p.nombre}: ${p.total} unidades`);
+    return `Comparación de stock:\n${lineas.join('\n')}\n\nTienes más ${partes[0].nombre} que del resto.`;
+}
+
+// ---------- Comparar lo que tienen varios empleados ----------
+function compararEmpleadosAsistente(empleadosArr, productoFiltro){
+    if(typeof calcularTotalesEmpleadoPorProducto !== 'function') return 'No pude comparar en este momento.';
+    const partes = empleadosArr.map(e=>{
+        const totales = calcularTotalesEmpleadoPorProducto(e.nombre, productoFiltro ? productoFiltro.nombre : '');
+        const total = totales.reduce((acc,t)=> acc + t.total, 0);
+        return { nombre: e.nombre, total };
+    });
+    partes.sort((a,b)=> b.total - a.total);
+    const sufijo = productoFiltro ? ` de ${productoFiltro.nombre}` : ' en total';
+    const lineas = partes.map(p=>`• ${p.nombre}: ${p.total} unidades${sufijo}`);
+    return `Comparación:\n${lineas.join('\n')}`;
+}
+
 // ---------- Solo los datos relevantes (según lo que ya sabemos por la conversación) ----------
 function construirContextoParaIA(){
     const ctx = { resumen_stock: resumirInventarioParaIA() };
@@ -2800,9 +2947,26 @@ async function llamarOpenAICompatibleAsistente(provider, mensajes, systemPrompt)
     return { texto, tokens };
 }
 
+// ---------- Llamada a tu intermediario de Apps Script (evita CORS y esconde la clave) ----------
+async function llamarAppsScriptAsistente(provider, mensajes, systemPrompt){
+    const res = await fetch(provider.endpoint, {
+        method: 'POST',
+        // Sin header de Content-Type a propósito: así el navegador lo manda como
+        // "text/plain" y Apps Script lo acepta sin bloqueos de CORS (mismo truco
+        // que ya usa tu integración con Google Sheets).
+        body: JSON.stringify({ systemPrompt, mensajes })
+    });
+    if(!res.ok) throw new Error((provider.nombre||'Apps Script') + ' HTTP ' + res.status);
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    if(data.proveedor) console.log('Asistente respondido usando:', data.proveedor);
+    return { texto: data.texto || '', tokens: data.tokens || 0 };
+}
+
 async function llamarProveedorIAAsistente(provider, mensajes, systemPrompt){
     if(provider.tipo === 'gemini') return llamarGeminiAsistente(provider, mensajes, systemPrompt);
     if(provider.tipo === 'openai_compatible') return llamarOpenAICompatibleAsistente(provider, mensajes, systemPrompt);
+    if(provider.tipo === 'apps_script') return llamarAppsScriptAsistente(provider, mensajes, systemPrompt);
     throw new Error('Tipo de proveedor de IA no soportado: ' + provider.tipo);
 }
 
@@ -2817,11 +2981,21 @@ async function consultarIAExternaAsistente(preguntaOriginal){
     const orden = compleja ? potentes.concat(rapidas) : rapidas.concat(potentes);
 
     const contextoDatos = construirContextoParaIA();
+    const ahora = new Date();
+    const fechaHoraTexto = ahora.toLocaleDateString('es-PE', {weekday:'long', year:'numeric', month:'long', day:'numeric'})
+        + ', ' + ahora.toLocaleTimeString('es-PE', {hour:'2-digit', minute:'2-digit'});
     const systemPrompt =
-        'Eres el asistente de almacén de "Inventario PRC". Responde siempre en español, de forma breve y directa. '+
-        'Básate ÚNICAMENTE en estos datos reales del inventario (formato JSON) para hablar de stock, productos, '+
-        'empleados o movimientos — no inventes cifras que no estén aquí:\n' + JSON.stringify(contextoDatos) +
-        '\nSi la pregunta no tiene relación con el almacén, igual respóndele con normalidad, como un asistente útil.';
+        'Eres un asistente conversacional general, y también el asistente de almacén de "Inventario PRC". '+
+        'Responde siempre en español, de forma breve y natural, como en una conversación normal. '+
+        'Puedes hablar de cualquier tema (saludos, preguntas generales, consejos, charla casual) con total normalidad, '+
+        'no estás limitado solo al almacén.\n'+
+        'Fecha y hora actuales: ' + fechaHoraTexto + '.\n'+
+        'Cuando la pregunta sea sobre el almacén (stock, productos, empleados, movimientos), básate ÚNICAMENTE '+
+        'en estos datos reales (formato JSON) y no inventes cifras que no estén aquí:\n' + JSON.stringify(contextoDatos) +
+        '\nSi no tienes suficiente información en estos datos para responder algo del almacén, dilo claramente en '+
+        'vez de inventar. Para temas que no sean del almacén y que requieran información en tiempo real (como el '+
+        'clima ahora mismo o noticias muy recientes), aclara que no tienes acceso a internet en vivo, pero ayuda '+
+        'igual con lo que sí puedas desde tu conocimiento general.';
 
     const mensajes = historialConversacionAsistente.slice(-6);
 
@@ -2850,13 +3024,7 @@ async function enviarPreguntaAsistente(){
     historialConversacionAsistente.push({ rol:'user', texto:pregunta });
     input.value = '';
 
-    let respuesta;
-    try{
-        respuesta = responderConsultaAlmacen(pregunta);
-    }catch(e){
-        console.error('Error respondiendo la consulta:', e);
-        respuesta = null;
-    }
+    let respuesta = null; // motor local desactivado temporalmente — todo pasa por la IA
 
     const esFallbackLocal = !respuesta || respuesta.indexOf('No estoy seguro de haber entendido') === 0;
     const esCompleja = esPreguntaComplejaAsistente(normalizarTextoAsistente(pregunta));
@@ -3036,8 +3204,55 @@ function responderConsultaAlmacen(preguntaOriginal){
         contextoAsistente = { empleado: null, producto: null, talla: null, estado: null };
     }
 
-    let producto = detectarProductoAsistente(q);
-    let empleado = detectarEmpleadoAsistente(q);
+    // Detección "cruda": solo lo que dice ESTE mensaje, sin memoria todavía.
+    // Es clave para no confundir "mi stock" (almacén general) con una
+    // pregunta sobre un empleado que se mencionó en un turno anterior.
+    const productoDetectadoAhora = detectarProductoAsistente(q);
+    const empleadoDetectadoAhora = detectarEmpleadoAsistente(q);
+
+    // 0) PRIORIDAD MÁXIMA: si el usuario dice "mi stock", "el almacén", "mi
+    //    inventario", etc. y ESTE mensaje no nombra a ningún empleado, la
+    //    pregunta es sobre el ALMACÉN — sin importar de qué empleado se
+    //    venía hablando antes. Si además menciona un producto ("camisas
+    //    blancas en mi stock"), se responde el stock de ese producto; si no,
+    //    el resumen general. Nunca debe responder con lo que tiene un empleado.
+    const kwAlmacenGeneral = ['mi stock','en mi stock','stock actual','mi almacen','el almacen','en el almacen',
+        'mi inventario','inventario actual','inventario general','existencias',
+        'disponible en el almacen','que tengo en el almacen','cuanto tengo en total',
+        'muestrame mi stock','dame el inventario','resumen de mi inventario',
+        'todo lo que hay en el almacen','que hay en el almacen','cuanto queda en el almacen'];
+    if(!empleadoDetectadoAhora && contieneAlgunaAsistente(q, kwAlmacenGeneral)){
+        if(productoDetectadoAhora){
+            const tallaAlmacen = detectarTallaAsistente(q, productoDetectadoAhora.tipo);
+            const estadoAlmacen = detectarEstadoAsistente(q);
+            contextoAsistente = {
+                empleado: null,
+                producto: productoDetectadoAhora,
+                talla: tallaAlmacen,
+                estado: estadoAlmacen
+            };
+            return responderStockProductoAsistente(productoDetectadoAhora, tallaAlmacen, estadoAlmacen);
+        }
+        contextoAsistente = { empleado: null, producto: null, talla: null, estado: null };
+        return resumenStockAlmacenTexto();
+    }
+
+    // 0c) PRIORIDAD ALTA: "qué se me acabó" / "qué no tengo" / "poco stock"
+    //     Pregunta sobre TODO el almacén, no de un producto ni empleado puntual,
+    //     así que también ignora cualquier empleado del que se venía hablando.
+    const regexAgotado   = /(se me acab|ya no tengo|\bno tengo\b|esta agotad|estan agotad|\bagotad|se termino|sin stock|\bme falta)/;
+    const regexStockBajo = /(poco stock|bajo stock|stock bajo|necesito reponer|por acabarse|se esta acabando|queda poco|por agotarse)/;
+    if(!empleadoDetectadoAhora && regexAgotado.test(q)){
+        contextoAsistente = { empleado: null, producto: null, talla: null, estado: null };
+        return alertaStockAsistente('agotado');
+    }
+    if(!empleadoDetectadoAhora && regexStockBajo.test(q)){
+        contextoAsistente = { empleado: null, producto: null, talla: null, estado: null };
+        return alertaStockAsistente('bajo');
+    }
+
+    let producto = productoDetectadoAhora;
+    let empleado = empleadoDetectadoAhora;
     const fecha = detectarFechaAsistente(q);
     let talla = detectarTallaAsistente(q, producto ? producto.tipo : (contextoAsistente.producto ? contextoAsistente.producto.tipo : null));
     let estado = detectarEstadoAsistente(q);
@@ -3060,7 +3275,7 @@ function responderConsultaAlmacen(preguntaOriginal){
     const kwSalida  = ['salio','retiro','retirado','se llevo','recibio','recibió','entregue','entregué'];
     const kwEntrada = ['entro','ingreso','agregado','llego','llegó','devolvio','devolvió','recibimos'];
     const kwStock   = ['stock','cuanto hay','cuantos hay','existencia','cuanto tengo','cuantas tengo','cuantos tengo','cuanto queda','disponible','tengo de','hay de'];
-    const kwPoder   = ['en su poder','tiene en su poder','cuanto tiene','que tiene','le di','entregue a','entregué a'];
+    const kwPoder   = ['en su poder','tiene en su poder','cuanto tiene','que tiene'];
     const kwTallaPregunta  = ['que talla','de que talla','en que talla','talla es','que numero','de que numero'];
     const kwEstadoPregunta = ['que estado','en que estado','esta nuevo','esta nueva','esta usado','esta usada'];
     const kwUltimo = ['ultimo','ultima','lo mas reciente','recientemente','recien'];
@@ -3119,6 +3334,41 @@ function responderConsultaAlmacen(preguntaOriginal){
         return `Lo último que ${verbo} fue ${r.prod}${(r.talla && r.talla!=='N/A')?' (talla '+r.talla+', '+r.estado.toLowerCase()+')':''} el ${r.fecha} — cantidad ${r.cant}${r.empleado ? ', con '+r.empleado : ''}.`;
     }
 
+    // 0c) Historial completo de un empleado (lista cronológica, no el total actual)
+    //     Ej: "historial de Jorge", "todos los movimientos de Andrés"
+    const kwHistorialCompleto = ['historial de','historial completo','todos los movimientos','todo lo que le entregue','todo el historial'];
+    if(empleado && contieneAlgunaAsistente(q, kwHistorialCompleto)){
+        return listarMovimientosEmpleadoAsistente(empleado.nombre, null, 12);
+    }
+
+    // 0d) Lo que se le ENTREGÓ a un empleado (historial, no el total neto actual)
+    //     Ej: "¿qué le entregué a Jorge?", "¿qué recibió Andrés?"
+    const kwEntregaHistorial = ['que le entregue','que le he entregado','que le di a','le entregue','que recibio','que ha recibido'];
+    if(empleado && contieneAlgunaAsistente(q, kwEntregaHistorial)){
+        return listarMovimientosEmpleadoAsistente(empleado.nombre, 'Retirado', 12);
+    }
+
+    // 0e) Lo que un empleado DEVOLVIÓ (historial de devoluciones)
+    //     Ej: "¿qué devolvió Jorge?", "¿qué ha regresado Andrés?"
+    const kwDevolucionHistorial = ['que devolvio','que ha devuelto','devoluciones de','que regreso','que ha regresado','que retorno'];
+    if(empleado && contieneAlgunaAsistente(q, kwDevolucionHistorial)){
+        return listarMovimientosEmpleadoAsistente(empleado.nombre, 'Agregado', 12);
+    }
+
+    // 0f) Comparaciones: entre dos productos, o entre dos empleados
+    //     Ej: "compara camisa blanca con pantalón marrón", "¿quién tiene más, Jorge o Andrés?"
+    const esComparacion = /\b(compara|comparacion|versus|vs\.?|cual tengo mas|que tengo mas|quien tiene mas|diferencia entre)\b/.test(q);
+    if(esComparacion){
+        const empleadosMultiples = detectarEmpleadosMultiplesAsistente(q);
+        if(empleadosMultiples.length >= 2){
+            return compararEmpleadosAsistente(empleadosMultiples, productoDetectadoAhora);
+        }
+        const productosMultiples = detectarProductosMultiplesAsistente(q);
+        if(productosMultiples.length >= 2){
+            return compararProductosAsistente(productosMultiples);
+        }
+    }
+
     // 1) ¿Qué tiene un empleado en su poder? (con o sin producto puntual)
     if(empleado && (contieneAlgunaAsistente(q,kwPoder) || (!fecha && !contieneAlgunaAsistente(q,kwSalida) && !contieneAlgunaAsistente(q,kwEntrada)))){
         if(typeof calcularTotalesEmpleadoPorProducto !== 'function'){
@@ -3160,14 +3410,7 @@ function responderConsultaAlmacen(preguntaOriginal){
 
     // 3) Stock actual de un producto puntual (respeta talla/estado si se mencionan)
     if(producto && (contieneAlgunaAsistente(q,kwStock) || !empleado)){
-        if(producto.tipo === 'celular'){
-            const info = (typeof inventory !== 'undefined' && inventory.celular) ? inventory.celular[producto.nombre] : null;
-            if(info && info.number) return `El celular ${producto.nombre} tiene registrado el número ${info.number}${info.operator ? ' ('+info.operator+')' : ''}.`;
-            return `No hay un número registrado para ${producto.nombre}.`;
-        }
-        const total = obtenerStockDetalladoAsistente(producto.nombre, producto.tipo, talla, estado);
-        if(total === null) return `No pude calcular el stock de ${producto.nombre} en este momento.`;
-        return `El stock actual de ${producto.nombre}${sufijoDetalle()} es de ${total} unidades.`;
+        return responderStockProductoAsistente(producto, talla, estado);
     }
 
     // 4) Últimos movimientos de un producto (si no se detectó nada más específico)
